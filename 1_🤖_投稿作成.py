@@ -35,20 +35,21 @@ with tab1:
                 st.success("ウェブサイトを読み込みました！")
             else:
                 st.info("同じウェブサイトのデータを使用")
+
     with col2:
-        namespaces = ["ns1", "ns2", "ns3", "ns4", "ns5"]
-        response = sh.generate_response_with_llm_for_multiple_namespaces(index, user_input, namespaces)
-        if response:  # responseがNoneでないことを確認
-            response_text = response.get('text')
-            st.session_state['response_text'] = response_text  # セッション状態にresponse_textを保存
-        else:
-            st.session_state['response_text'] = "エラー: プロットを生成できませんでした。"
+        if submit_button:
+            namespaces = ["ns1", "ns2", "ns3", "ns4", "ns5"]
+            response = sh.generate_response_with_llm_for_multiple_namespaces(index, user_input, namespaces)
+            if response:  # responseがNoneでないことを確認
+                response_text = response.get('text')
+                st.session_state['response_text'] = response_text  # セッション状態にresponse_textを保存
+            else:
+                st.session_state['response_text'] = "エラー: プロットを生成できませんでした。"
 
         # セッション状態からresponse_textを取得、存在しない場合はデフォルトのメッセージを表示
         displayed_value = st.session_state.get('response_text', "生成結果 : プロットが表示されます")
         st.text_area("生成結果", value=displayed_value, height=400)
-
-               
+  
 
 
 
