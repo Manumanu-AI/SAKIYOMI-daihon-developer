@@ -1,5 +1,6 @@
 import streamlit as st
 import scraping_helper as sh
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 st.set_page_config(
     page_icon='🤖',
@@ -17,26 +18,23 @@ with tab1:
     col1, col2 = st.columns(2)
 
     with col1:
-        user_input = st.text_area("生成指示 : 作りたいプロットのイメージを入力", value="""以下の内容で台本を書いてください。\nテーマ：\n仕事が早い人に共通する5つの特徴\n\nターゲット：\n\nその他の指示：""", height=300)
+        user_input = st.text_area("生成指示 : 作りたいプロットのイメージを入力", value="""以下の内容で台本を書いてください。\nテーマ：\n\nターゲット：\n\nその他の指示：""", height=300)
         url = st.text_input("参考URL")
         submit_button = st.button('送信')
-        delete_all_button4 = st.button("全データ削除", key="delete_all_0")
 
-        if delete_all_button4:
-            index = sh.initialize_pinecone()
-            sh.delete_all_data_in_namespace(index, "ns1")
-            st.success("全データが削除されました！")
-
-    with col2:
         if submit_button:
-            with st.spinner('プロットを生成中...'):
-                if url:
-                    index = sh.initialize_pinecone()
-                    scraped_data = sh.scrape_url(url)
-                    combined_text, metadata_list = sh.prepare_text_and_metadata(sh.extract_keys_from_json(scraped_data))
-                    chunks = sh.split_text(combined_text)
-                    embeddings = sh.make_chunks_embeddings(chunks)
-                    sh.store_data_in_pinecone(index, embeddings, chunks, metadata_list, "ns1")
+            if 'last_url' not in st.session_state or st.session_state['last_url'] != url:
+                st.session_state['last_url'] = url
+                index = sh.initialize_pinecone()
+                sh.delete_all_data_in_namespace(index, "ns1")
+                scraped_data = sh.scrape_url(url)
+                combined_text, metadata_list = sh.prepare_text_and_metadata(sh.extract_keys_from_json(scraped_data))
+                chunks = sh.split_text(combined_text)
+                embeddings = sh.make_chunks_embeddings(chunks)
+                sh.store_data_in_pinecone(index, embeddings, chunks, metadata_list, "ns1")
+                st.success("ウェブサイトを読み込みました！")
+            else:
+                st.info("同じウェブサイトのデータを使用")
 
                 namespaces = ["ns1", "ns2", "ns3", "ns4", "ns5"]
                 response = sh.generate_response_with_llm_for_multiple_namespaces(index, user_input, namespaces)
