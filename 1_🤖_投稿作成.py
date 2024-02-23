@@ -25,6 +25,7 @@ with tab1:
         if submit_button:
             index = sh.initialize_pinecone()
             if 'last_url' not in st.session_state or st.session_state['last_url'] != url:
+                sh.delete_all_data_in_namespace(index, "ns1")
                 st.session_state['last_url'] = url
                 scraped_data = sh.scrape_url(url)
                 combined_text, metadata_list = sh.prepare_text_and_metadata(sh.extract_keys_from_json(scraped_data))
