@@ -39,6 +39,7 @@ with tab1:
     with col2:
         if submit_button:
             namespaces = ["ns1", "ns2", "ns3", "ns4", "ns5"]
+            index = sh.initialize_pinecone()
             response = sh.generate_response_with_llm_for_multiple_namespaces(index, user_input, namespaces)
             if response:  # responseがNoneでないことを確認
                 response_text = response.get('text')
