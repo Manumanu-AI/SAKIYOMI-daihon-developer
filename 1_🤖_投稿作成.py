@@ -39,7 +39,7 @@ with tab1:
                 chunks = sh.split_text(combined_text)
                 embeddings = sh.make_chunks_embeddings(chunks)
                 sh.store_data_in_pinecone(index, embeddings, chunks, metadata_list, "ns1")
-		time.sleep(10)
+                time.sleep(10)
                 st.success("ウェブサイトを読み込みました！")
             else:
                 st.info("同じウェブサイトのデータを使用")
