@@ -234,8 +234,16 @@ def generate_response_with_llm_for_multiple_namespaces(index, user_input, namesp
                 top_k=1,
                 include_metadata=True
             )
-            result_texts = [result['metadata']['text'_chunk'] for result in search_results['matches']]
-            results[ns] = " ".join(result_texts) if result_texts else "情報なし"
+            if ns == "ns3":
+                # ns3のメタデータを直接利用する特別な処理
+                if search_results['matches']:
+                    metadata = search_results['matches'][0]['metadata']
+                    # 新しいメタデータ形式に基づいて内容を整形してLLMに渡す
+                    results[ns] = "\n".join([f"{key}: {value}" for key, value in metadata.items()])
+            else:
+                # 他の名前空間の処理は変更なし
+                result_texts = [result['metadata']['text_chunk'] for result in search_results['matches']]
+                results[ns] = " ".join(result_texts) if result_texts else "情報なし"
         except KeyError as e:
             print(f"エラーが発生しました: 名前空間 '{ns}' で {e} キーが見つかりません。")
             results[ns] = "エラー: 検索結果が見つかりませんでした。"
@@ -250,7 +258,6 @@ def generate_response_with_llm_for_multiple_namespaces(index, user_input, namesp
     
     ----------
     【台本作成時のポイント】
-    ・MECEに詳しく書いてください
     ・なるべく具体的にかいてください。そのため、1枚1枚の情報量は多くなっても良いです。
     ・数字で伝えられる部分はなるべくそうする。
     ・合計8枚以上で書いてください。
@@ -271,7 +278,6 @@ def generate_response_with_llm_for_multiple_namespaces(index, user_input, namesp
     ----------
     【アウトプット例】
     {example_plot}
-                                    
     """)
 
     # LLMにプロンプトを渡して応答を生成
@@ -290,6 +296,7 @@ def generate_response_with_llm_for_multiple_namespaces(index, user_input, namesp
             "example_plot": example_plot
         })
         return response
+
 
 
 
