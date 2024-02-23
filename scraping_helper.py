@@ -338,13 +338,13 @@ embeddings = make_chunks_embeddings(chunks)
 print("エンベディングスの数:", len(embeddings))
 
 #print("テスト: データをPineconeに保存")
-store_data_in_pinecone(index, embeddings, chunks, metadata_list, "ns2")
+store_data_in_pinecone(index, embeddings, chunks, metadata_list, "ns1")
 
 
 # クエリを実行して結果をプリント
 query = "トマトとはを最初に解説して、その後トマトの育て方を詳しく教えてください。 また栄養面からもトマトを育てるメリットを"
-search_results = perform_similarity_search(index, query, "ns2" , top_k=10)
+search_results = perform_similarity_search(index, query, "ns1" , top_k=1)
 print(search_results)
 
 
-#delete_all_data_in_namespace(index, "ns2")
+#delete_all_data_in_namespace(index, "ns1")
