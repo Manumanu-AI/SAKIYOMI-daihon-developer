@@ -234,7 +234,7 @@ def generate_response_with_llm_for_multiple_namespaces(index, user_input, namesp
                 top_k=1,
                 include_metadata=True
             )
-            result_texts = [result['metadata'] for result in search_results['matches']]
+            result_texts = [result['metadata']['text'_chunk'] for result in search_results['matches']]
             results[ns] = " ".join(result_texts) if result_texts else "情報なし"
         except KeyError as e:
             print(f"エラーが発生しました: 名前空間 '{ns}' で {e} キーが見つかりません。")
