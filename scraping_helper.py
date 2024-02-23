@@ -91,7 +91,7 @@ def prepare_text_and_metadata(combined_data):
 
 # テキストをチャンクに
 def split_text(combined_text):
-    set_chunk_length = 2000
+    set_chunk_length = 1000
     set_chunk_overlap = 100
     chunks = RecursiveCharacterTextSplitter(chunk_size = set_chunk_length, chunk_overlap = set_chunk_overlap)
     return chunks.split_text(combined_text)
