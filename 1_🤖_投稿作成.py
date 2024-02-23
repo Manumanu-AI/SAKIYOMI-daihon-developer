@@ -35,7 +35,8 @@ with tab1:
                 st.success("ウェブサイトを読み込みました！")
             else:
                 st.info("同じウェブサイトのデータを使用")
-
+                
+     with col2:
                 namespaces = ["ns1", "ns2", "ns3", "ns4", "ns5"]
                 response = sh.generate_response_with_llm_for_multiple_namespaces(index, user_input, namespaces)
                 if response:  # responseがNoneでないことを確認
