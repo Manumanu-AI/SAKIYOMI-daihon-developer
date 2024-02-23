@@ -29,9 +29,7 @@ with tab1:
 				# ns1のデータを削除しようと試みる
                     sh.delete_all_data_in_namespace(index, "ns1")
                 except Exception as e:
-				# エラーが発生した場合、エラーメッセージを表示して処理を続行
-                    st.error(f"データ削除中にエラーが発生しました: {e}")
-				# ここで再度delete_all_data_in_namespaceを呼び出す必要はありません
+			pass
 
                 st.session_state['last_url'] = url
                 scraped_data = sh.scrape_url(url)
