@@ -28,8 +28,9 @@ with tab1:
                 try:
 				# ns1のデータを削除しようと試みる
                     sh.delete_all_data_in_namespace(index, "ns1")
-                except Exception as e:
-		    pass
+                except Exception:
+            # エラーが発生しても何もせずに処理を続行する
+                    pass
 
                 st.session_state['last_url'] = url
                 scraped_data = sh.scrape_url(url)
