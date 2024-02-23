@@ -1,4 +1,4 @@
-import requests
+toimport requests
 import json
 import os
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
@@ -156,7 +156,7 @@ def generate_query_embedding(query):
     return model.encode([query])[0]
 
 # シミラリティ検索を実行する関数
-def perform_similarity_search(index, query, namespace, top_k=1):
+def perform_similarity_search(index, query, namespace, top_k=3):
     query_embedding = generate_query_embedding(query)
     return index.query(
         namespace=namespace,
