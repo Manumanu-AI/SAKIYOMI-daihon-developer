@@ -346,5 +346,4 @@ query = "トマトとはを最初に解説して、その後トマトの育て�
 search_results = perform_similarity_search(index, query, "ns1" , top_k=1)
 print(search_results)
 
-
-#delete_all_data_in_namespace(index, "ns1")
+delete_all_data_in_namespace(index, "ns1")
