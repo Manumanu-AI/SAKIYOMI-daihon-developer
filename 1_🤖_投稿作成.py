@@ -23,6 +23,7 @@ with tab1:
         submit_button = st.button('送信')
 
         if submit_button:
+            sh.delete_all_data_in_namespace(index, "ns1")
             if 'last_url' not in st.session_state or st.session_state['last_url'] != url:
                 st.session_state['last_url'] = url
                 index = sh.initialize_pinecone()
