@@ -26,7 +26,6 @@ with tab1:
             if 'last_url' not in st.session_state or st.session_state['last_url'] != url:
                 st.session_state['last_url'] = url
                 index = sh.initialize_pinecone()
-                sh.delete_all_data_in_namespace(index, "ns1")
                 scraped_data = sh.scrape_url(url)
                 combined_text, metadata_list = sh.prepare_text_and_metadata(sh.extract_keys_from_json(scraped_data))
                 chunks = sh.split_text(combined_text)
