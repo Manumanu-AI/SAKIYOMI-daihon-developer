@@ -16,7 +16,7 @@ st.markdown('#')
 
 st.header('台本の生成方法')
 
-st.video('https://youtu.be/TRjq7t2Ms5I?si=q4ds9FEAaCwHu2Vl')
+st.video('https://youtu.be/SZjbQvWrXYA?si=iI3j92OLbI5YiXfl')
 
 st.markdown('#')
 st.subheader('操作方法')
