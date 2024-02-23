@@ -23,9 +23,16 @@ with tab1:
         submit_button = st.button('送信')
 
         if submit_button:
-            index = sh.initialize_pinecone()
             if 'last_url' not in st.session_state or st.session_state['last_url'] != url:
-                sh.delete_all_data_in_namespace(index, "ns1")
+                index = sh.initialize_pinecone()
+                try:
+				# ns1のデータを削除しようと試みる
+                    sh.delete_all_data_in_namespace(index, "ns1")
+                except Exception as e:
+				# エラーが発生した場合、エラーメッセージを表示して処理を続行
+                    st.error(f"データ削除中にエラーが発生しました: {e}")
+				# ここで再度delete_all_data_in_namespaceを呼び出す必要はありません
+
                 st.session_state['last_url'] = url
                 scraped_data = sh.scrape_url(url)
                 combined_text, metadata_list = sh.prepare_text_and_metadata(sh.extract_keys_from_json(scraped_data))
@@ -35,6 +42,7 @@ with tab1:
                 st.success("ウェブサイトを読み込みました！")
             else:
                 st.info("同じウェブサイトのデータを使用")
+
 
     with col2:
         if submit_button:
