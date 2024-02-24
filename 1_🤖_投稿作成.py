@@ -20,7 +20,7 @@ with tab1:
 
     with col1:
         user_input = st.text_area("生成指示 : 作りたいプロットのイメージを入力", value="""以下の内容で台本を書いてください。\nテーマ：後悔しないための会社選びの方法\n\nターゲット：1回目の転職に失敗し、2回目の転職では絶対に失敗したくないと思っている人。なんとしても納得した転職を実現したいと考えている。\n\nその他の指示：\n・5つのポイントごとに紹介するコンテンツにしたい\n・注意するべきことと、そのために何をするのかを明確にしたい""", height=300)
-        url = st.text_input("参考URL", value="https://doda.jp/guide/ncase/ ")
+        url = st.text_input("参考URL", value="https://shukatsu-mirai.com/archives/100625")
         submit_button = st.button('送信')
 
         if submit_button:
