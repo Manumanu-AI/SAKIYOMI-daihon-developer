@@ -240,7 +240,8 @@ def generate_claude3_response(user_input, example_plot, system_prompt, results_n
             {"role": "user", "content": user_input},
         ]
     )
-    return message.content
+    generated_text = message.content[0].text.replace('\\n', '\n')
+    return generated_text
 
 
 
@@ -290,7 +291,7 @@ def generate_response_with_llm_for_multiple_namespaces(index, user_input, namesp
                 "example_plot": example_plot
             })
     else:
-        response_text = generate_claude3_response(
+        response = generate_claude3_response(
             user_input,
             example_plot,
             system_prompt,
@@ -299,8 +300,9 @@ def generate_response_with_llm_for_multiple_namespaces(index, user_input, namesp
             results.get('ns3', '情報なし'),
             results.get('ns4', '情報なし'),
             results.get('ns5', '情報なし')
+
         )
-    response = {'text': response_text}
+    return response
 
 
 
