@@ -218,12 +218,11 @@ def store_pdf_data_in_pinecone(index, chunk_embeddings, chunks, pdf_file_name, n
 
 
 def generate_claude3_response(user_input, example_plot, system_prompt, results_ns1, results_ns2, results_ns3, results_ns4, results_ns5):
-    client = anthropic.Anthropic(
+    client = anthropic.Client(
         api_key=st.secrets["ANTHROPIC_API_KEY"]
     )
     example_plot = example_plot.replace("\n", "\\n")
-    prompt = system_prompt.format(
-        user_input=user_input,
+    system_message = system_prompt.format(
         results_ns1=results_ns1,
         results_ns2=results_ns2,
         results_ns3=results_ns3,
@@ -235,7 +234,10 @@ def generate_claude3_response(user_input, example_plot, system_prompt, results_n
         model="claude-3-opus-20240229",
         max_tokens=2048,
         temperature=0.85,
-        prompt=prompt
+        system=system_message,
+        messages=[
+            {"role": "user", "content": user_input},
+        ]
     )
     return message.content
 
