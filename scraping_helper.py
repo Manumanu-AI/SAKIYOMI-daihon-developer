@@ -223,6 +223,7 @@ def generate_claude3_response(user_input, example_plot, system_prompt, results_n
     )
     example_plot = example_plot.replace("\n", "\\n")
     system_message = system_prompt.format(
+        user_input=user_input,
         results_ns1=results_ns1,
         results_ns2=results_ns2,
         results_ns3=results_ns3,
