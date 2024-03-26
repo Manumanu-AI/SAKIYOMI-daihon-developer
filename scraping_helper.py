@@ -240,7 +240,7 @@ def generate_claude3_response(user_input, example_plot, system_prompt, results_n
             {"role": "user", "content": user_input},
         ]
     )
-    return message.content[0]
+    return message.content
 
 
 
