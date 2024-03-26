@@ -290,7 +290,7 @@ def generate_response_with_llm_for_multiple_namespaces(index, user_input, namesp
                 "example_plot": example_plot
             })
     else:
-        response = generate_claude3_response(
+        response_text = generate_claude3_response(
             user_input,
             example_plot,
             system_prompt,
@@ -300,7 +300,7 @@ def generate_response_with_llm_for_multiple_namespaces(index, user_input, namesp
             results.get('ns4', '情報なし'),
             results.get('ns5', '情報なし')
         )
-    return response
+    response = {'text': response_text}
 
 
 
