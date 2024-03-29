@@ -231,13 +231,16 @@ def generate_claude3_response(user_input, example_plot, system_prompt, results_n
         results_ns5=results_ns5,
         example_plot=example_plot
     )
-    response = client.complete(
+    message = client.messages.create(
         model="claude-3-opus-20240229",
-        prompt=f"{system_message}\n\nUser: {user_input}\n\nAssistant: ",
-        max_tokens_to_sample=2048,
+        max_tokens=2048,
         temperature=0.85,
+        system=system_message,
+        messages=[
+            {"role": "user", "content": user_input},
+        ]
     )
-    generated_text = response.truncate("\n\nUser: ").strip().replace('\\n', '\n')
+    generated_text = message.content[0].text.replace('\\n', '\n')
     return generated_text
 
 
@@ -288,7 +291,7 @@ def generate_response_with_llm_for_multiple_namespaces(index, user_input, namesp
                 "example_plot": example_plot
             })
     else:
-        response = generate_claude3_response(
+        response_text = generate_claude3_response(
             user_input,
             example_plot,
             system_prompt,
@@ -297,8 +300,8 @@ def generate_response_with_llm_for_multiple_namespaces(index, user_input, namesp
             results.get('ns3', '情報なし'),
             results.get('ns4', '情報なし'),
             results.get('ns5', '情報なし')
-
         )
+        response = {'text': response_text}  # responseを辞書に変換
     return response
 
 
