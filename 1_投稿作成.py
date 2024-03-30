@@ -161,7 +161,7 @@ with tab2:
 
 
             # Pineconeにデータを保存
-            sh.store_pdf_data_in_pinecone(index, embeddings, pdf_file2.name, "ns4")
+            sh.store_pdf_data_in_pinecone(index, embeddings,chunks, pdf_file2.name, "ns4")
             st.success("データをPineconeに登録しました！")
 
         # 全データ削除ボタン
@@ -194,7 +194,7 @@ with tab2:
 
 
             # Pineconeにデータを保存
-            sh.store_pdf_data_in_pinecone(index, embeddings, pdf_file3.name, "ns5")
+            sh.store_pdf_data_in_pinecone(index, embeddings, chunks, pdf_file3.name, "ns5")
             st.success("データをPineconeに登録しました！")
 
         # 全データ削除ボタン
