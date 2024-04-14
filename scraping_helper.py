@@ -38,7 +38,8 @@ def scrape_url(url):
         response = client.actor(actor_id).call(
             run_input={"startUrls": [{"url": url}]},
             content_type="application/json",
-            timeout_secs=5,
+            max_items=5,
+            timeout_secs=3,
         )
 
         if response is None:
