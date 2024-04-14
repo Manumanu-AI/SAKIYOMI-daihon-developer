@@ -19,7 +19,6 @@ from langchain.callbacks import tracing_v2_enabled
 from prompt import system_prompt
 import anthropic
 from apify_client import ApifyClient
-from apify_client.consts import ActorJobStatus
 
 apify_wcc_endpoint = st.secrets['website_content_crawler_endpoint']
 apifyapi_key = st.secrets['apifyapi_key']
@@ -32,41 +31,29 @@ openai_api_key = st.secrets['OPENAI_API_KEY']
 def scrape_url(url):
     try:
         print(f"scrape_url: URL = {url}")  # デバッグ用プリント
-        
+
         client = ApifyClient(token=apifyapi_key)
         actor_id = "apify/website-content-crawler"
-        
-        run = client.actor(actor_id).start(
+
+        run = client.actor(actor_id).call(
             run_input={
                 "startUrls": [{"url": url}]
             },
-            timeout_secs=30
+            content_type="application/json",
+            timeout_secs=30,
+            wait_secs=30
         )
-        
-        # WebContentCrawlerの実行が完了するまで待機
-        job_id = run["id"]
-        job = client.job(job_id).wait_for_finish(timeout_secs=30, wait_secs=1)
-        
-        if job["status"] == ActorJobStatus.TIMED_OUT:
+
+        if run is None:
             print("WebContentCrawlerの実行がタイムアウトしました。")
-        elif job["status"] != ActorJobStatus.SUCCEEDED:
-            raise Exception(f"WebContentCrawlerの実行が失敗しました。ステータス: {job['status']}")
-        
+            return None
+
         # 結果を取得
         dataset_items = client.dataset(run["defaultDatasetId"]).list_items().items
         result = [item["data"] for item in dataset_items]
-        
+
         return json.dumps(result)
-    
-    except Exception as e:
-        raise Exception(f"scrape_urlでエラーが発生しました: {e}")
-        
-        # 結果を取得
-        dataset_items = client.dataset(run["defaultDatasetId"]).list_items().items
-        result = [item["data"] for item in dataset_items]
-        
-        return json.dumps(result)
-    
+
     except Exception as e:
         raise Exception(f"scrape_urlでエラーが発生しました: {e}")
 
