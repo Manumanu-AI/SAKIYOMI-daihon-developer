@@ -18,6 +18,7 @@ from langchain_openai import ChatOpenAI
 from langchain.callbacks import tracing_v2_enabled
 from prompt import system_prompt
 import anthropic
+from apify_client import ApifyClient
 
 apify_wcc_endpoint = st.secrets['website_content_crawler_endpoint']
 apifyapi_key = st.secrets['apifyapi_key']
@@ -30,15 +31,26 @@ openai_api_key = st.secrets['OPENAI_API_KEY']
 def scrape_url(url):
     try:
         print(f"scrape_url: URL = {url}")  # デバッグ用プリント
-        headers = {"Authorization": f"Bearer {apifyapi_key}"}
-        payload = {"startUrls": [{"url": url}]}
-        response = requests.post(apify_wcc_endpoint, json=payload, headers=headers)
-
-        # print(f"scrape_url: Response = {response.text[:100]}...")  # デバッグ用プリント（応答の最初の100文字を表示）
-        if response.status_code in [200, 201]:
-            return response.text
-        else:
-            raise Exception(f"ステータスコード: {response.status_code}, レスポンス: {response.text}")
+        
+        client = ApifyClient(token=apifyapi_key)
+        actor_id = "apify/website-content-crawler"
+        
+        run = client.actor(actor_id).start(
+            run_input={
+                "startUrls": [{"url": url}]
+            },
+            timeout_secs=30
+        )
+        
+        # WebContentCrawlerの実行が完了するまで待機
+        client.run(run["id"]).wait_for_finish()
+        
+        # 結果を取得
+        dataset_items = client.dataset(run["defaultDatasetId"]).list_items().items
+        result = [item["data"] for item in dataset_items]
+        
+        return json.dumps(result)
+    
     except Exception as e:
         raise Exception(f"scrape_urlでエラーが発生しました: {e}")
 
