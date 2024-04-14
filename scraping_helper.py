@@ -18,6 +18,7 @@ from langchain_openai import ChatOpenAI
 from langchain.callbacks import tracing_v2_enabled
 from prompt import system_prompt
 import anthropic
+from apify_client import ApifyClient
 
 apify_wcc_endpoint = st.secrets['website_content_crawler_endpoint']
 apifyapi_key = st.secrets['apifyapi_key']
@@ -30,15 +31,23 @@ openai_api_key = st.secrets['OPENAI_API_KEY']
 def scrape_url(url):
     try:
         print(f"scrape_url: URL = {url}")  # デバッグ用プリント
-        headers = {"Authorization": f"Bearer {apifyapi_key}"}
-        payload = {"startUrls": [{"url": url}]}
-        response = requests.post(apify_wcc_endpoint, json=payload, headers=headers, timeout=5)
 
-        # print(f"scrape_url: Response = {response.text[:100]}...")  # デバッグ用プリント（応答の最初の100文字を表示）
-        if response.status_code in [200, 201]:
-            return response.text
-        else:
-            raise Exception(f"ステータスコード: {response.status_code}, レスポンス: {response.text}")
+        client = ApifyClient(token=apifyapi_key)
+        actor_id = "apify/website-content-crawler"
+
+        response = client.actor(actor_id).call(
+            run_input={"startUrls": [{"url": url}]},
+            content_type="application/json",
+            timeout_secs=5,
+        )
+
+        if response is None:
+            raise Exception("WebContentCrawlerの実行がタイムアウトしました。")
+
+        # print(f"scrape_url: Response = {response[:100]}...")  # デバッグ用プリント（応答の最初の100文字を表示）
+
+        return response
+
     except Exception as e:
         raise Exception(f"scrape_urlでエラーが発生しました: {e}")
 
