@@ -13,7 +13,7 @@ st.title('SAKIYOMI 投稿作成AI')
 st.sidebar.title('メニュー')
 
 # タブセット1: "Input / Generated Script" を含むタブ
-tab1, tab2, tab3 = st.tabs(["プロット生成", "データ登録", "タイトル候補"])
+tab1, tab2, tab3 = st.tabs(["プロット生成", "データ登録", "テーマ提案"])
 
 with tab1:
     col1, col2 = st.columns(2)
@@ -218,14 +218,14 @@ with tab2:
             sh.delete_all_data_in_namespace(index, "ns5")
             st.success("全データが削除されました！")
 
-# 検索タブ
+# テーマ提案タブ
 with tab3:
-    st.header("検索条件を入力")
+    st.header("作りたい投稿のイメージを入力 (空白でもOK)")
     col1, col2 = st.columns(2)
     with col1:
         with st.form("search_form"):
-            user_query = st.text_area("検索キーワードを入力してください", height=50)
-            submit_button = st.form_submit_button("検索")
+            user_query = st.text_area("作りたい投稿のイメージを入力して下さい。", height=50)
+            submit_button = st.form_submit_button("テーマ提案")
 
     # 検索実行
     with col2:
