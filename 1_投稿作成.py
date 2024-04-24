@@ -13,7 +13,7 @@ st.title('SAKIYOMI 投稿作成AI')
 st.sidebar.title('メニュー')
 
 # タブセット1: "Input / Generated Script" を含むタブ
-tab1, tab2, tab3 = st.tabs(["プロット生成", "データ登録", "テーマ提案"])
+tab1, tab2, tab3 = st.tabs(["プロット生成", "データ登録", "ネタ提案"])
 
 with tab1:
     col1, col2 = st.columns(2)
