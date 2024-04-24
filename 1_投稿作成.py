@@ -220,11 +220,11 @@ with tab2:
 
 # テーマ提案タブ
 with tab3:
-    st.header("作りたい投稿のイメージを入力 (空白でもOK)")
+    st.header("投稿ネタ提案")
     col1, col2 = st.columns(2)
     with col1:
         with st.form("search_form"):
-            user_query = st.text_area("作りたい投稿のイメージを入力して下さい。", height=50)
+            user_query = st.text_area("作りたい投稿ジャンルのキーワードやイメージを入力して下さい。\n(空白でもOK)", height=50)
             submit_button = st.form_submit_button("テーマ提案")
 
     # 検索実行
