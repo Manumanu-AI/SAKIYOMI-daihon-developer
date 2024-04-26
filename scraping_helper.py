@@ -1,5 +1,3 @@
-import requests
-import json
 import os
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 import requests
@@ -16,18 +14,11 @@ from langchain.chains import LLMChain
 from langchain.prompts import PromptTemplate
 from langchain_openai import ChatOpenAI
 from langchain.callbacks import tracing_v2_enabled
-from prompt import system_prompt, system_prompt_title_reccomend
+from prompt import system_prompt
 import anthropic
 from apify_client import ApifyClient
-import logging
+from ng_url_list import ng_urls
 
-# ロガーを設定
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
-
-# ハンドラーを設定してログを外部ファイルに記録
-handler = logging.FileHandler("external_log.txt")
-logger.addHandler(handler)
 
 apify_wcc_endpoint = st.secrets['website_content_crawler_endpoint']
 apifyapi_key = st.secrets['apifyapi_key']
@@ -36,38 +27,29 @@ pinecone_index_name = st.secrets['PINECONE_INDEX_NAME']
 openai_api_key = st.secrets['OPENAI_API_KEY']
 
 
+def is_ng_url(url):
+    return any(ng_url in url for ng_url in ng_urls)
+
 # URLからコンテンツをスクレイピングする関数
 def scrape_url(url):
-    try:
-        print(f"scrape_url: URL = {url}")  # デバッグ用プリント
-
-        client = ApifyClient(token=apifyapi_key)
-        actor_id = "apify/website-content-crawler"
-
-        response = client.actor(actor_id).call(
-            run_input={"startUrls": [{"url": url}]},
-            content_type="application/json",
-            max_items=5,
-            timeout_secs=3,
-        )
-
-        if response is None:
-            raise Exception("WebContentCrawlerの実行がタイムアウトしました。")
-
-        # print(f"scrape_url: Response = {response[:100]}...")  # デバッグ用プリント（応答の最初の100文字を表示）
-
-        return response
-
-    except Exception as e:
-        raise Exception(f"scrape_urlでエラーが発生しました: {e}")
+    apify_client = ApifyClient('apify_api_akEVaWF0kZKZZT68WMUTvfrvOcAUjm436pIg')
+    actor_call = apify_client.actor('apify/website-content-crawler').call(
+        run_input={
+            'startUrls': [{'url': url}],
+            'maxRequestsPerCrawl': 3,
+            'maxCrawlingDepth': 3,
+        },
+        timeout_secs=120
+    )
+    dataset_items = apify_client.dataset(actor_call['defaultDatasetId']).list_items().items
+    return list(dataset_items)
 
 
-
+    
 # データ内の必要なキーだけを取得する関数
-def extract_keys_from_json(json_data):
-    data = json.loads(json_data)
+def extract_keys_from_json(data):  # 引数名を json_data から data に変更
     extracted_data = []
-    for item in data:
+    for item in data:  # json.loads を使用せずに直接リストを処理
         formatted_data = {
             'url': item.get('url', ''),
             'description': item.get('metadata', {}).get('description', ''),
@@ -123,7 +105,7 @@ def make_chunks_embeddings(chunks):
     # モデルのロード
     model = SentenceTransformer('all-MiniLM-L6-v2')
 
-    #
+    # 
     embeddings = model.encode(chunks)
 
     return embeddings
@@ -169,55 +151,23 @@ def store_data_in_pinecone(index, chunk_embeddings, chunks, metadata_list, names
     for vector in vectors_to_upsert:
         print(f"Saved: {vector['id']}")
 
-# シミラリティ検索を実行する関数
-# def perform_similarity_search(index, query, namespace, top_k=3):
-#     query_embedding = generate_query_embedding(query)
-#     return index.query(
-#         namespace=namespace,
-#         vector=query_embedding.tolist(),
-#         top_k=top_k,
-#         include_metadata=True
-#     )
 
-def perform_similarity_search(index, query, namespace, top_k=3):
-    """
-    指定したインデックスでセマンティック検索を実行し、最も類似した上位k個の結果を返す。
-
-    :param index: Pineconeのインデックスオブジェクト
-    :param query: 検索に使用するクエリテキスト
-    :param namespace: 使用する名前空間
-    :param top_k: 返される結果の数
-    :return: 検索結果のリスト、各要素は辞書形式でメタデータを含む
-    """
-    # クエリのベクトル化
-    query_embedding = generate_query_embedding(query)
-
-    # logger.info(query_embedding.tolist())
-
-    # クエリの実行
-    search_results = index.query(
-        namespace=namespace,
-        vector=query_embedding.tolist(),
-        top_k=top_k,
-        include_metadata=True
-    )
-
-    # logger.info("------------------ search_results ------------------")
-    # logger.info(search_results)
-    return search_results
-
-# 検索結果からメタデータの中のタイトルキーのみを取得する関数
-def get_search_results_titles(search_results):
-    search_results_metadata = search_results["matches"]
-    search_results_titles = [result["metadata"].get("1枚目-表紙 (タイトル)", "N/A") for result in search_results_metadata]
-    logger.info(search_results_titles)
-    return search_results_titles
 
 # クエリの埋め込みベクトルを生成する関数
 def generate_query_embedding(query):
     model = SentenceTransformer('all-MiniLM-L6-v2')
     return model.encode([query])[0]
 
+# シミラリティ検索を実行する関数
+def perform_similarity_search(index, query, namespace, top_k=3):
+    query_embedding = generate_query_embedding(query)
+    return index.query(
+        namespace=namespace,
+        vector=query_embedding.tolist(),
+        top_k=top_k,
+        include_metadata=True
+    )
+    
 def delete_all_data_in_namespace(index, namespace):
     index.delete(delete_all=True, namespace=namespace)
     print(f"次のネームスペースから全データが削除されました： '{namespace}'.")
@@ -227,10 +177,10 @@ def delete_all_data_in_namespace(index, namespace):
 def delete_data_by_url(index, namespace, url):
     # 名前空間内のすべてのIDを取得
     all_ids = index.describe_index_stats(namespace=namespace)["namespaces"][namespace]["ids"]
-
+    
     # 指定されたURLに基づいてIDをフィルタリング
     ids_to_delete = [id for id in all_ids if url in id]
-
+    
     # フィルタリングされたIDを削除
     index.delete(ids=ids_to_delete, namespace=namespace)
     print(f"ネームスペース【'{namespace}'】から次のURLの全データ削除されました【'{url}'】.")
@@ -324,7 +274,7 @@ def generate_response_with_llm_for_multiple_namespaces(index, user_input, namesp
             results[ns] = "エラー: 検索結果が見つかりませんでした。"
 
     # プロンプトテンプレートの準備
-    prompt_template = PromptTemplate(template=system_prompt, input_variables=["user_input", "results_ns1", "results_ns2", "results_ns3", "results_ns4", "results_ns5", "example_plot"])
+    prompt_template = PromptTemplate(template=system_prompt, input_variables=["user_input", "results_ns1", "results_ns2", "results_ns3", "results_ns4", "results_ns5", "example_plot"]) 
 
     # LLMの選択
     if selected_llm == "GPT-4":
@@ -355,21 +305,16 @@ def generate_response_with_llm_for_multiple_namespaces(index, user_input, namesp
         response = {'text': response_text}  # responseを辞書に変換
     return response
 
-# 競合他社の投稿タイトルのリストからオリジナルのタイトル候補を生成する関数
-def generate_new_titles(user_query, competing_titles):
-    prompt_template = PromptTemplate(template=system_prompt_title_reccomend, input_variables=["user_query", "competing_titles"])
-    llm = ChatOpenAI(model='gpt-4-1106-preview', temperature=1.0)
-    llm_chain = LLMChain(prompt=prompt_template, llm=llm)
-    response = llm_chain.run({
-        "user_query": user_query,
-        "competing_titles": "\n".join(competing_titles)
-    })
-    return response
+
+
+
+
+
 
 
 """"
 user_input = "トマトとはを最初に解説して、その後トマトの育て方を詳しく教えてください。 また栄養面からもトマトを育てるメリットを。そして絵文字をたくさんつかってください"
-namespaces = ["ns1", "ns2", "ns3", "ns4"]
+namespaces = ["ns1", "ns2", "ns3", "ns4"] 
 index = initialize_pinecone()
 response = generate_response_with_llm_for_multiple_namespaces(index, user_input, namespaces)
 print('ひーはー', response)
