@@ -370,17 +370,6 @@ def generate_new_titles(user_query, competing_titles, selected_llm):
     })
     return response
 
-# 競合他社の投稿タイトルのリストからオリジナルのタイトル候補を生成する関数
-def generate_new_titles_claude(user_query, competing_titles):
-    prompt_template = PromptTemplate(template=system_prompt_title_reccomend, input_variables=["user_query", "competing_titles"])
-    llm = ChatAnthropic(model_name='claude-3-opus-20240229', temperature=1.0)
-    llm_chain = LLMChain(prompt=prompt_template, llm=llm)
-    response = llm_chain.run({
-        "user_query": user_query,
-        "competing_titles": "\n".join(competing_titles)
-    })
-    return response
-
 """"
 user_input = "トマトとはを最初に解説して、その後トマトの育て方を詳しく教えてください。 また栄養面からもトマトを育てるメリットを。そして絵文字をたくさんつかってください"
 namespaces = ["ns1", "ns2", "ns3", "ns4"]
