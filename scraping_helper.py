@@ -15,6 +15,7 @@ from example_plot import example_plot
 from langchain.chains import LLMChain
 from langchain.prompts import PromptTemplate
 from langchain_openai import ChatOpenAI
+from langchain_anthropic import ChatAnthropic
 from langchain.callbacks import tracing_v2_enabled
 from prompt import system_prompt, system_prompt_title_reccomend
 import anthropic
@@ -356,9 +357,12 @@ def generate_response_with_llm_for_multiple_namespaces(index, user_input, namesp
     return response
 
 # 競合他社の投稿タイトルのリストからオリジナルのタイトル候補を生成する関数
-def generate_new_titles(user_query, competing_titles):
+def generate_new_titles(user_query, competing_titles, selected_llm):
     prompt_template = PromptTemplate(template=system_prompt_title_reccomend, input_variables=["user_query", "competing_titles"])
-    llm = ChatOpenAI(model='gpt-4-1106-preview', temperature=1.0)
+    if selected_llm == "GPT-4":
+        llm = ChatOpenAI(model='gpt-4-1106-preview', temperature=1.0)
+    else:
+        llm = ChatAnthropic(model_name='claude-3-opus-20240229', temperature=1.0)
     llm_chain = LLMChain(prompt=prompt_template, llm=llm)
     response = llm_chain.run({
         "user_query": user_query,
@@ -366,6 +370,16 @@ def generate_new_titles(user_query, competing_titles):
     })
     return response
 
+# 競合他社の投稿タイトルのリストからオリジナルのタイトル候補を生成する関数
+def generate_new_titles_claude(user_query, competing_titles):
+    prompt_template = PromptTemplate(template=system_prompt_title_reccomend, input_variables=["user_query", "competing_titles"])
+    llm = ChatAnthropic(model_name='claude-3-opus-20240229', temperature=1.0)
+    llm_chain = LLMChain(prompt=prompt_template, llm=llm)
+    response = llm_chain.run({
+        "user_query": user_query,
+        "competing_titles": "\n".join(competing_titles)
+    })
+    return response
 
 """"
 user_input = "トマトとはを最初に解説して、その後トマトの育て方を詳しく教えてください。 また栄養面からもトマトを育てるメリットを。そして絵文字をたくさんつかってください"
