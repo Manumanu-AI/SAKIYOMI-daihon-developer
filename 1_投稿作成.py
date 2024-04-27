@@ -64,7 +64,7 @@ with tab1:
                 index = sh.initialize_pinecone()
 
                 # クエリの実行
-                query_results = sh.perform_similarity_search(index, "*", "ns3", top_k=5)
+                query_results = sh.perform_similarity_search(index, "*", "ns3", top_k=10)
                 titles = sh.get_search_results_titles(query_results)
                 original_titles = sh.generate_new_titles("*", titles, selected_llm)
                 display_titles = [f"- {title}" for title in original_titles.split('\n') if title.strip()]  # 空行を除外
