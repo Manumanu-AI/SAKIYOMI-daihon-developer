@@ -37,6 +37,7 @@ with tab1:
                 st.session_state['last_url'] = url
                 if url != "":  # URLが空欄でない場合のみスクレイピングを実行
                     scraped_data = sh.scrape_url(url)
+
                     combined_text, metadata_list = sh.prepare_text_and_metadata(sh.extract_keys_from_json(scraped_data))
                     chunks = sh.split_text(combined_text)
                     embeddings = sh.make_chunks_embeddings(chunks)
@@ -225,9 +226,9 @@ with tab3:
     st.header("投稿ネタ提案")
     col1, col2 = st.columns(2)
     with col1:
-        selected_llm_title = st.radio("LLMの選択", ("GPT-4", "Claude3"), key="radio_llm_selection_title")
         with st.form("search_form"):
             user_query = st.text_area("作りたい投稿ジャンルのキーワードやイメージを入力して下さい。\n(空白でもOK)", height=50)
+            selected_llm_title = st.radio("LLMの選択", ("GPT-4", "Claude3"), key="radio_llm_selection_title")
             submit_button = st.form_submit_button("テーマ提案")
 
     # 検索実行
