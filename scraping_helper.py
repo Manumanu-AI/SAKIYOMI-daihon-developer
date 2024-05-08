@@ -39,27 +39,18 @@ openai_api_key = st.secrets['OPENAI_API_KEY']
 
 # URLからコンテンツをスクレイピングする関数
 def scrape_url(url):
-    try:
-        print(f"scrape_url: URL = {url}")  # デバッグ用プリント
+    apify_client = ApifyClient('apify_api_akEVaWF0kZKZZT68WMUTvfrvOcAUjm436pIg')
+    actor_call = apify_client.actor('apify/website-content-crawler').call(
+        run_input={
+            'startUrls': [{'url': url}],
+            'maxRequestsPerCrawl': 3,
+            'maxCrawlingDepth': 3,
+        },
+        timeout_secs=120
+    )
+    dataset_items = apify_client.dataset(actor_call['defaultDatasetId']).list_items().items
+    return list(dataset_items)
 
-        client = ApifyClient(token=apifyapi_key)
-        actor_id = "apify/website-content-crawler"
-
-        response = client.actor(actor_id).call(
-            run_input={"startUrls": [{"url": url}]},
-            content_type="application/json",
-            timeout_secs=180,
-        )
-
-        if response is None:
-            raise Exception("WebContentCrawlerの実行がタイムアウトしました。")
-
-        # print(f"scrape_url: Response = {response[:100]}...")  # デバッグ用プリント（応答の最初の100文字を表示）
-
-        return response
-
-    except Exception as e:
-        raise Exception(f"scrape_urlでエラーが発生しました: {e}")
 
 
 
