@@ -27,6 +27,10 @@ with tab1:
 
     if submit_button:
         with st.spinner('送信中...'):
+        if sh.is_ng_url(url):
+            st.error("このURLは読み込めません。お手数をおかけしますが別のURLをお試し下さい")
+            st.stop() 
+        else:
             if 'last_url' not in st.session_state or (st.session_state['last_url'] != url or url == ""):
                 index = sh.initialize_pinecone()
                 try:
