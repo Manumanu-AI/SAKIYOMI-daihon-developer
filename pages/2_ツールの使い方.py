@@ -4,6 +4,8 @@ st.set_page_config(
     layout='wide',
 )
 
+st.sidebar.title('メニュー')
+
 custom_css = """
 <style>
     .tighter {
