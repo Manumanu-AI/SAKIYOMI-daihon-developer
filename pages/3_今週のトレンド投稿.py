@@ -8,6 +8,10 @@ st.set_page_config(layout="wide")
 st.title('おすすめ投稿一覧(ベータ版)')
 st.markdown('#')
 st.header('最新の投稿')
+st.set_page_config(
+    page_icon='🤖',
+    layout='wide',
+)
 
 # InstagramのURLのリスト
 instagram_urls = [
