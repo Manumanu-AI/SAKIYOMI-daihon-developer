@@ -231,7 +231,7 @@ with tab3:
     col1, col2 = st.columns(2)
     with col1:
         with st.form("search_form"):
-            user_query = st.text_area("作りたい投稿ジャンルのキーワードやイメージを入力して下さい。\n(空白でもOK)", height=50)
+            user_query = st.text_area("作りたい投稿ジャンルのキーワードやイメージを入力して下さい。", height=50)
             selected_llm_title = st.radio("LLMの選択", ("GPT-4", "Claude3"), key="radio_llm_selection_title")
             submit_button = st.form_submit_button("テーマ提案")
 
