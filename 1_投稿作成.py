@@ -53,7 +53,7 @@ with tab1:
 
     with col2:
         if submit_button:
-            with st.spinner('送信中...'):
+            with st.spinner('台本を生成中...'):
                 namespaces = ["ns1", "ns2", "ns3", "ns4", "ns5"]
                 index = sh.initialize_pinecone()
                 response = sh.generate_response_with_llm_for_multiple_namespaces(index, user_input, namespaces, selected_llm)  # selected_llmを渡す
@@ -231,7 +231,7 @@ with tab3:
     col1, col2 = st.columns(2)
     with col1:
         with st.form("search_form"):
-            user_query = st.text_area("作りたい投稿ジャンルのキーワードやイメージを入力して下さい。\n(空白でもOK)", height=50)
+            user_query = st.text_area("作りたい投稿ジャンルのキーワードやイメージを入力して下さい。", height=50)
             selected_llm_title = st.radio("LLMの選択", ("GPT-4", "Claude3"), key="radio_llm_selection_title")
             submit_button = st.form_submit_button("テーマ提案")
 
