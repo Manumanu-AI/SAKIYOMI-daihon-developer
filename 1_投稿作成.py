@@ -53,7 +53,7 @@ with tab1:
 
     with col2:
         if submit_button:
-            with st.spinner('送信中...'):
+            with st.spinner('台本を生成中...'):
                 namespaces = ["ns1", "ns2", "ns3", "ns4", "ns5"]
                 index = sh.initialize_pinecone()
                 response = sh.generate_response_with_llm_for_multiple_namespaces(index, user_input, namespaces, selected_llm)  # selected_llmを渡す
