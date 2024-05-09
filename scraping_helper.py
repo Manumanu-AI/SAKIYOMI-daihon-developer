@@ -21,6 +21,7 @@ from prompt import system_prompt, system_prompt_title_reccomend
 import anthropic
 from apify_client import ApifyClient
 import logging
+from ng_url_list import ng_urls
 
 # ロガーを設定
 logger = logging.getLogger(__name__)
@@ -36,6 +37,9 @@ pinecone_api_key = st.secrets['PINECONE_API_KEY']
 pinecone_index_name = st.secrets['PINECONE_INDEX_NAME']
 openai_api_key = st.secrets['OPENAI_API_KEY']
 
+#NG URLを判別する関数
+def is_ng_url(url):
+    return any(ng_url in url for ng_url in ng_urls)
 
 # URLからコンテンツをスクレイピングする関数
 def scrape_url(url):
