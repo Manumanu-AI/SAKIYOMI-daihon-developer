@@ -7,6 +7,7 @@ st.set_page_config(
     page_icon='🤖',
     layout='wide',
 )
+st.sidebar.title('メニュー')
 
 st.title('おすすめ投稿一覧(ベータ版)')
 st.markdown('#')
