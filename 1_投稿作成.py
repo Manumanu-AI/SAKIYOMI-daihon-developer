@@ -65,7 +65,7 @@ with tab1:
                 else:
                     st.session_state['response_text'] = "エラー: プロットを生成できませんでした。"
 
-"""
+        """
         if title_submit_button:
             with st.spinner('タイトル生成中...'):
                 # Pineconeインデックスの初期化
@@ -81,7 +81,7 @@ with tab1:
                     st.session_state['response_text'] = "\n".join(response_text)
                 else:
                     st.session_state['response_text'] = "エラー: プロットを生成できませんでした。"
-"""
+        """
 
         # セッション状態からresponse_textを取得、存在しない場合はデフォルトのメッセージを表示
         displayed_value = st.session_state.get('response_text', "生成結果 : プロットが表示されます")
