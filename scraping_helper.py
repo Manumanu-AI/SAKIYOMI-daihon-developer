@@ -59,10 +59,9 @@ def scrape_url(url):
 
 
 # データ内の必要なキーだけを取得する関数
-def extract_keys_from_json(json_data):
-    data = json.loads(json_data)
+def extract_keys_from_json(data):  # 引数名を json_data から data に変更
     extracted_data = []
-    for item in data:
+    for item in data:  # json.loads を使用せずに直接リストを処理
         formatted_data = {
             'url': item.get('url', ''),
             'description': item.get('metadata', {}).get('description', ''),
