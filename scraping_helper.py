@@ -322,7 +322,7 @@ def generate_response_with_llm_for_multiple_namespaces(index, user_input, namesp
 
     # LLMの選択
     if selected_llm == "GPT-4":
-        llm = ChatOpenAI(model='gpt-4-1106-preview', temperature=0.7)
+        llm = ChatOpenAI(model='gpt-4o', temperature=0.7)
         llm_chain = LLMChain(prompt=prompt_template, llm=llm)
         project_name = st.secrets["LANGCHAIN_PROJECT"]
         with tracing_v2_enabled(project_name=project_name):
