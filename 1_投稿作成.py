@@ -86,6 +86,7 @@ with tab2:
         if register_button1:
             # スクレイピング
             scraped_data = sh.scrape_url(url)
+            print(scraped_data)
 
 
             combined_text, metadata_list = sh.prepare_text_and_metadata(sh.extract_keys_from_json(scraped_data))
