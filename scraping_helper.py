@@ -52,6 +52,7 @@ def scrape_url(url):
         },
         timeout_secs=120
     )
+    dataset_items = apify_client.dataset(actor_call['defaultDatasetId']).list_items().items
     return list(dataset_items)
 
 
