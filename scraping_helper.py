@@ -52,10 +52,6 @@ def scrape_url(url):
         },
         timeout_secs=120
     )
-    dataset_items = apify_client.dataset(actor_call['defaultDatasetId']).list_items().items
-    # スクレイピングした内容をターミナルにプリント
-    for item in dataset_items:
-        print(item)
     return list(dataset_items)
 
 
