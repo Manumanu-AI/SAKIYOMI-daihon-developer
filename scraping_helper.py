@@ -321,7 +321,7 @@ def generate_response_with_llm_for_multiple_namespaces(index, user_input, namesp
     prompt_template = PromptTemplate(template=system_prompt, input_variables=["user_input", "results_ns1", "results_ns2", "results_ns3", "results_ns4", "results_ns5", "example_plot"])
 
     # LLMの選択
-    if selected_llm == "GPT-4":
+    if selected_llm == "GPT-4o":
         llm = ChatOpenAI(model='gpt-4o', temperature=0.7)
         llm_chain = LLMChain(prompt=prompt_template, llm=llm)
         project_name = st.secrets["LANGCHAIN_PROJECT"]
@@ -352,7 +352,7 @@ def generate_response_with_llm_for_multiple_namespaces(index, user_input, namesp
 # 競合他社の投稿タイトルのリストからオリジナルのタイトル候補を生成する関数
 def generate_new_titles(user_query, competing_titles, selected_llm):
     prompt_template = PromptTemplate(template=system_prompt_title_reccomend, input_variables=["user_query", "competing_titles"])
-    if selected_llm == "GPT-4":
+    if selected_llm == "GPT-4o":
         llm = ChatOpenAI(model='gpt-4o', temperature=1.0)
     else:
         llm = ChatAnthropic(model_name='claude-3-opus-20240229', temperature=1.0)
