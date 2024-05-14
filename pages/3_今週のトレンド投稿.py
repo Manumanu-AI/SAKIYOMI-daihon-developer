@@ -17,7 +17,7 @@ st.title('デザイン提案')
 tab1, tab2 = st.tabs(["今週のトレンド投稿", "Canvaデザイン"])
 
 with tab1:
-    st.header('今週のトレンド投稿')
+    st.header('今週のトレンド投稿(調整中)')
 
     # InstagramのURLのリスト
     instagram_urls = [
