@@ -23,7 +23,6 @@ with tab1:
         url = st.text_input("参考URL")
         selected_llm = st.radio("LLMの選択", ("GPT-4", "Claude3"))
         submit_button = st.button('送信')
-        title_submit_button = st.button('タイトル生成')
 
     if submit_button:
         with st.spinner('送信中...'):
@@ -60,22 +59,6 @@ with tab1:
                 if response:
                     response_text = response.get('text')
                     st.session_state['response_text'] = response_text
-                else:
-                    st.session_state['response_text'] = "エラー: プロットを生成できませんでした。"
-
-        if title_submit_button:
-            with st.spinner('タイトル生成中...'):
-                # Pineconeインデックスの初期化
-                index = sh.initialize_pinecone()
-
-                # クエリの実行
-                query_results = sh.perform_similarity_search(index, "*", "ns3", top_k=10)
-                titles = sh.get_search_results_titles(query_results)
-                original_titles = sh.generate_new_titles("*", titles, selected_llm)
-                display_titles = [f"- {title}" for title in original_titles.split('\n') if title.strip()]  # 空行を除外
-                if original_titles:
-                    response_text = [f"- {title}" for title in original_titles.split('\n') if title.strip()]  # 空行を除外
-                    st.session_state['response_text'] = "\n".join(response_text)
                 else:
                     st.session_state['response_text'] = "エラー: プロットを生成できませんでした。"
 

@@ -3,11 +3,16 @@ import streamlit.components.v1 as components
 import re
 
 # ページの設定
-st.set_page_config(layout="wide")
+st.set_page_config(
+    page_icon='🤖',
+    layout='wide',
+)
+st.sidebar.title('メニュー')
 
 st.title('おすすめ投稿一覧(ベータ版)')
 st.markdown('#')
 st.header('最新の投稿')
+
 
 # InstagramのURLのリスト
 instagram_urls = [
