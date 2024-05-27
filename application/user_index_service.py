@@ -1,7 +1,7 @@
 from infrastructure.user_index_repository import UserIndexRepository
 from domain.user_index import UserIndex
 from typing import Dict, Any
-
+from firebase_admin import firestore
 class UserIndexService:
     def __init__(self):
         self.user_index_repo = UserIndexRepository()

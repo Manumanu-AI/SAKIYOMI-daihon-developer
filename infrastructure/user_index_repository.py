@@ -6,7 +6,6 @@ from config.firebase import db
 class UserIndexRepository:
     def create_user_index(self, user_index: UserIndex) -> Dict[str, Any]:
         doc_ref = db.collection('users').document(user_index.user_id).collection('user_index').document(user_index.user_id)
-        # INFO: 1:1 の参照の簡素化のために、index_id に user_id を設定
         user_index.index_id = user_index.user_id
         doc_ref.set(user_index.dict())
         return {'status': 'success', 'index_id': user_index.user_id}

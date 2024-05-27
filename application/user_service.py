@@ -9,15 +9,17 @@ class UserService:
     def __init__(self):
         self.user_repo = UserRepository()
 
-    def sign_up_user(self, email: str, password: str, display_name: str, instagram_username: str) -> Dict[str, Any]:
-        user = User(
-            user_id='',
-            email=email,
-            display_name=display_name,
-            role='user',
-            instagram_username=instagram_username
-        )
-        return self.user_repo.create_user(user, password)
+    def create_or_update_user(self, user: User, password: str) -> Dict[str, Any]:
+        existing_user_response = self.user_repo.read_user_by_email(user.email)
+        print("----------- existing_user_response -----------")
+        print(existing_user_response)
+        if existing_user_response['status'] == 'success':
+            # User exists, update the user information
+            user.user_id = existing_user_response['user_id']
+            return self.user_repo.update_user(user)
+        else:
+            # User does not exist, create a new user
+            return self.user_repo.create_user(user, password)
 
     def login_user(self, email: str, password: str) -> Dict[str, Any]:
         try:
