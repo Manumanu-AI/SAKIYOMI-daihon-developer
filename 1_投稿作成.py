@@ -4,9 +4,14 @@ import time
 from utils.firebase_auth import sign_in, get_user_info
 from application.user_service import UserService
 from application.user_index_service import UserIndexService
+from application.prompt_service import PromptService
+from utils.example_prompt import system_prompt_example, system_prompt_title_reccomend_example
+
 
 user_service = UserService()
 user_index_service = UserIndexService()
+prompt_service = PromptService()
+
 
 def main():
 
@@ -29,12 +34,27 @@ def main():
             st.session_state['logged_in'] = True
             st.session_state['id_token'] = id_token
             st.session_state['user_info'] = user_info_response['users'][0]
-            # ここでユーザーインデックスを取得
+
+            # ユーザーインデックスの取得
             user_index = user_index_service.read_user_index(st.session_state['user_info']['localId'])
             if user_index['status'] == 'success':
                 st.session_state['user_index'] = user_index['data']
             else:
                 st.session_state['user_index'] = None
+
+            # プロンプトの取得
+            prompt_post = prompt_service.read_prompt(st.session_state['user_info']['localId'], type='post')
+            prompt_title = prompt_service.read_prompt(st.session_state['user_info']['localId'], type='title')
+            if prompt_post['status'] == 'success' and prompt_title['status'] == 'success':
+                st.session_state['prompt'] = {
+                    'system_prompt': prompt_post['data']['text'],
+                    'system_prompt_title_reccomend': prompt_title['data']['text']
+                }
+            else:
+                st.session_state['prompt'] = {
+                    'system_prompt': system_prompt_example,
+                    'system_prompt_title_reccomend': system_prompt_title_reccomend_example
+                }
 
     if not st.session_state['logged_in']:
         st.sidebar.title('ログイン')
@@ -91,6 +111,7 @@ def main():
         st.sidebar.write(f"Index Name: {st.session_state['user_index']['index_name']}")
         st.sidebar.write(f"Langsmith Project Name: {st.session_state['user_index']['langsmith_project_name']}")
         index_name = st.session_state['user_index']['index_name']
+        langsmith_project_name = st.session_state['user_index']['langsmith_project_name']
         try:
             index = sh.initialize_pinecone(index_name)
         except Exception as e:
@@ -102,6 +123,16 @@ def main():
         st.sidebar.write("インデックスがありません")
         st.sidebar.write("新しいインデックスを作成してください")
         index_name = None
+
+    # プロンプト情報を表示
+    if 'prompt' in st.session_state:
+        st.sidebar.write("投稿プロンプト:")
+        st.sidebar.code(st.session_state['prompt']['system_prompt'], language='markdown')
+        st.sidebar.write("タイトル提案プロンプト:")
+        st.sidebar.code(st.session_state['prompt']['system_prompt_title_reccomend'], language='markdown')
+    else:
+        st.sidebar.write("プロンプトがありません")
+        st.sidebar.write("新しいプロンプトを作成してください")
         return
 
     # タブセット1: "Input / Generated Script" を含むタブ
@@ -145,7 +176,7 @@ def main():
             if submit_button:
                 with st.spinner('台本を生成中...'):
                     namespaces = ["ns1", "ns2", "ns3", "ns4", "ns5"]
-                    response = sh.generate_response_with_llm_for_multiple_namespaces(index, user_input, namespaces, selected_llm)  # selected_llmを渡す
+                    response = sh.generate_response_with_llm_for_multiple_namespaces(index, user_input, namespaces, selected_llm, st.session_state['prompt']['system_prompt'], langsmith_project_name)
                     if response:
                         response_text = response.get('text')
                         st.session_state['response_text'] = response_text
@@ -313,7 +344,7 @@ def main():
                     # クエリの実行
                     query_results = sh.perform_similarity_search(index, user_query, "ns3", top_k=10)
                     titles = sh.get_search_results_titles(query_results)
-                    original_titles = sh.generate_new_titles(user_query, titles, selected_llm_title)
+                    original_titles = sh.generate_new_titles(user_query, titles, selected_llm_title, st.session_state['prompt']['system_prompt_title_reccomend'])
                     st.session_state['reccomend_title'] = [f"- {title}" for title in original_titles.split('\n') if title.strip()]
                 display_titles = st.session_state.get('reccomend_title', "")
                 st.text_area("生成されたタイトル案:", "\n".join(display_titles), height=500)
