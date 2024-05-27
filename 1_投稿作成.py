@@ -1,11 +1,15 @@
 import streamlit as st
-import requests
-import json
-import scraping_helper as sh
-from concurrent.futures import ThreadPoolExecutor, as_completed
+import utils.scraping_helper as sh
 import time
-from utils.firebase.firebase_auth import sign_in, get_user_info
+from utils.firebase_auth import sign_in, get_user_info
+from application.user_service import UserService
+from application.user_index_service import UserIndexService
+
+user_service = UserService()
+user_index_service = UserIndexService()
+
 def main():
+
     st.set_page_config(
         page_icon='🤖',
         layout='wide',
@@ -25,6 +29,12 @@ def main():
             st.session_state['logged_in'] = True
             st.session_state['id_token'] = id_token
             st.session_state['user_info'] = user_info_response['users'][0]
+            # ここでユーザーインデックスを取得
+            user_index = user_index_service.read_user_index(st.session_state['user_info']['localId'])
+            if user_index['status'] == 'success':
+                st.session_state['user_index'] = user_index['data']
+            else:
+                st.session_state['user_index'] = None
 
     if not st.session_state['logged_in']:
         st.sidebar.title('ログイン')
@@ -33,13 +43,20 @@ def main():
         login_button = st.sidebar.button('ログイン')
 
         if login_button:
-            auth_response = sign_in(email, password)
+            # auth_response = sign_in(email, password)
+            auth_response = user_service.login_user(email, password)
+            print(auth_response)
             if auth_response:
                 st.session_state['logged_in'] = True
                 st.session_state['id_token'] = auth_response['idToken']
                 user_info_response = get_user_info(auth_response['idToken'])
                 if user_info_response:
                     st.session_state['user_info'] = user_info_response['users'][0]
+                    user_index = user_index_service.read_user_index(st.session_state['user_info']['localId'])
+                    if user_index['status'] == 'success':
+                        st.session_state['user_index'] = user_index['data']
+                    else:
+                        st.session_state['user_index'] = None
                     # クエリパラメータにIDトークンを設定し、その後にリロードをトリガーする
                     st.experimental_set_query_params(id_token=auth_response['idToken'])
                     st.sidebar.success('ログインに成功しました')
@@ -52,12 +69,13 @@ def main():
         st.write("## SAKIYOMI 投稿 AI へようこそ！ログインしてください。")
         return
 
-    st.sidebar.title('メニュー')
+    st.sidebar.title('ユーザー情報')
 
     if st.sidebar.button('ログアウト'):
         st.session_state['logged_in'] = False
         st.session_state.pop('id_token', None)
         st.session_state.pop('user_info', None)
+        st.session_state.pop('user_index', None)
         # クエリパラメータをクリア
         st.experimental_set_query_params()
         st.sidebar.success('ログアウトしました')
@@ -66,8 +84,25 @@ def main():
 
     # ユーザー情報を表示
     if 'user_info' in st.session_state:
-        st.sidebar.write(f"Logged in as: {st.session_state['user_info']['email']}")
+        st.sidebar.write(f"User ID: {st.session_state['user_info']['email']}")
 
+    # インデックス情報を表示
+    if 'user_index' in st.session_state and st.session_state['user_index']:
+        st.sidebar.write(f"Index Name: {st.session_state['user_index']['index_name']}")
+        st.sidebar.write(f"Langsmith Project Name: {st.session_state['user_index']['langsmith_project_name']}")
+        index_name = st.session_state['user_index']['index_name']
+        try:
+            index = sh.initialize_pinecone(index_name)
+        except Exception as e:
+            st.sidebar.write("インデックスの初期化に失敗しました")
+            st.sidebar.write("エラーメッセージ: ", e)
+            index_name = None
+            return
+    else:
+        st.sidebar.write("インデックスがありません")
+        st.sidebar.write("新しいインデックスを作成してください")
+        index_name = None
+        return
 
     # タブセット1: "Input / Generated Script" を含むタブ
     tab1, tab2, tab3 = st.tabs(["プロット生成", "データ登録", "ネタ提案"])
@@ -88,7 +123,6 @@ def main():
                     st.stop()
                 else:
                     if 'last_url' not in st.session_state or (st.session_state['last_url'] != url or url == ""):
-                        index = sh.initialize_pinecone()
                         try:
                             sh.delete_all_data_in_namespace(index, "ns1")
                         except Exception:
@@ -111,7 +145,6 @@ def main():
             if submit_button:
                 with st.spinner('台本を生成中...'):
                     namespaces = ["ns1", "ns2", "ns3", "ns4", "ns5"]
-                    index = sh.initialize_pinecone()
                     response = sh.generate_response_with_llm_for_multiple_namespaces(index, user_input, namespaces, selected_llm)  # selected_llmを渡す
                     if response:
                         response_text = response.get('text')
@@ -131,7 +164,6 @@ def main():
         col1, col2, col3, col4 = st.columns(4)
 
         with col1:
-            index = sh.initialize_pinecone()
             st.subheader("URLの登録")
 
             # URL入力
@@ -166,7 +198,6 @@ def main():
 
 
         with col2:
-            index = sh.initialize_pinecone()  # Pineconeを初期化
             st.subheader("過去プロットの登録")
 
             # PDFファイルアップロード
@@ -200,7 +231,6 @@ def main():
 
 
         with col3:
-            index = sh.initialize_pinecone()  # Pineconeを初期化
             st.subheader("競合データの登録")
 
             # PDFファイルアップロード
@@ -233,7 +263,6 @@ def main():
                 st.success("全データが削除されました！")
 
         with col4:
-            index = sh.initialize_pinecone()  # Pineconeを初期化
             st.subheader("SAKIYOMIデータの登録")
 
             # PDFファイルアップロード
@@ -279,8 +308,6 @@ def main():
         with col2:
             if submit_button:
                 with st.spinner('テーマ提案中...'):
-                    # Pineconeインデックスの初期化
-                    index = sh.initialize_pinecone()
                     if not user_query:
                         user_query = "*"
                     # クエリの実行
