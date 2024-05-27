@@ -17,7 +17,7 @@ from langchain.prompts import PromptTemplate
 from langchain_openai import ChatOpenAI
 from langchain_anthropic import ChatAnthropic
 from langchain.callbacks import tracing_v2_enabled
-from prompt import system_prompt, system_prompt_title_reccomend
+from utils.example_prompt import system_prompt_example, system_prompt_title_reccomend_example
 import anthropic
 from apify_client import ApifyClient
 import logging
@@ -34,7 +34,6 @@ logger.addHandler(handler)
 apify_wcc_endpoint = st.secrets['website_content_crawler_endpoint']
 apifyapi_key = st.secrets['apifyapi_key']
 pinecone_api_key = st.secrets['PINECONE_API_KEY']
-# pinecone_index_name = st.secrets['PINECONE_INDEX_NAME']
 openai_api_key = st.secrets['OPENAI_API_KEY']
 
 #NG URLを判別する関数
@@ -116,8 +115,6 @@ from sentence_transformers import SentenceTransformer
 def make_chunks_embeddings(chunks):
     # モデルのロード
     model = SentenceTransformer('all-MiniLM-L6-v2')
-
-    #
     embeddings = model.encode(chunks)
 
     return embeddings
@@ -290,7 +287,7 @@ def generate_claude3_response(user_input, example_plot, system_prompt, results_n
 
 
 
-def generate_response_with_llm_for_multiple_namespaces(index, user_input, namespaces, selected_llm):
+def generate_response_with_llm_for_multiple_namespaces(index, user_input, namespaces, selected_llm, system_prompt, project_name):
     results = {}  # 各名前空間の検索結果を格納する辞書
 
     # 名前空間ごとに検索結果を取得
@@ -350,7 +347,7 @@ def generate_response_with_llm_for_multiple_namespaces(index, user_input, namesp
     return response
 
 # 競合他社の投稿タイトルのリストからオリジナルのタイトル候補を生成する関数
-def generate_new_titles(user_query, competing_titles, selected_llm):
+def generate_new_titles(user_query, competing_titles, selected_llm, system_prompt_title_reccomend):
     prompt_template = PromptTemplate(template=system_prompt_title_reccomend, input_variables=["user_query", "competing_titles"])
     if selected_llm == "GPT-4o":
         llm = ChatOpenAI(model='gpt-4o', temperature=1.0)
