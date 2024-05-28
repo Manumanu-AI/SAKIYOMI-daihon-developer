@@ -5,6 +5,7 @@ class UserIndex(BaseModel):
     user_id: str = Field(..., min_length=1, max_length=100)
     index_name: str = Field(..., min_length=1, max_length=100)
     langsmith_project_name: str = Field(..., min_length=1, max_length=100)
+    pinecone_api_key: str = Field(..., min_length=1, max_length=1000)
 
     @validator('index_name', 'langsmith_project_name')
     def validate_non_empty(cls, v):

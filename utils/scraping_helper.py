@@ -33,7 +33,6 @@ logger.addHandler(handler)
 
 apify_wcc_endpoint = st.secrets['website_content_crawler_endpoint']
 apifyapi_key = st.secrets['apifyapi_key']
-pinecone_api_key = st.secrets['PINECONE_API_KEY']
 openai_api_key = st.secrets['OPENAI_API_KEY']
 
 #NG URLを判別する関数
@@ -122,7 +121,7 @@ def make_chunks_embeddings(chunks):
 
 
 ### pinecone処理
-def initialize_pinecone(pinecone_index_name):
+def initialize_pinecone(pinecone_index_name, pinecone_api_key):
     pinecone = Pinecone(api_key=pinecone_api_key)
     index = pinecone.Index(pinecone_index_name)
     return index

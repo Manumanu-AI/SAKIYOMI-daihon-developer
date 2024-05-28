@@ -111,9 +111,10 @@ def main():
         st.sidebar.write(f"Index Name: {st.session_state['user_index']['index_name']}")
         st.sidebar.write(f"Langsmith Project Name: {st.session_state['user_index']['langsmith_project_name']}")
         index_name = st.session_state['user_index']['index_name']
+        pinecone_api_key = st.session_state['user_index']['pinecone_api_key']
         langsmith_project_name = st.session_state['user_index']['langsmith_project_name']
         try:
-            index = sh.initialize_pinecone(index_name)
+            index = sh.initialize_pinecone(index_name, pinecone_api_key)
         except Exception as e:
             st.sidebar.write("インデックスの初期化に失敗しました")
             st.sidebar.write("エラーメッセージ: ", e)
