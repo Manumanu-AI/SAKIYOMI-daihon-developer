@@ -103,38 +103,38 @@ def main():
         return
 
     # ユーザー情報を表示
-    if 'user_info' in st.session_state:
-        st.sidebar.write(f"User ID: {st.session_state['user_info']['email']}")
+    # if 'user_info' in st.session_state:
+    #     st.sidebar.write(f"User ID: {st.session_state['user_info']['email']}")
 
-    # インデックス情報を表示
-    if 'user_index' in st.session_state and st.session_state['user_index']:
-        st.sidebar.write(f"Index Name: {st.session_state['user_index']['index_name']}")
-        st.sidebar.write(f"Langsmith Project Name: {st.session_state['user_index']['langsmith_project_name']}")
-        index_name = st.session_state['user_index']['index_name']
-        pinecone_api_key = st.session_state['user_index']['pinecone_api_key']
-        langsmith_project_name = st.session_state['user_index']['langsmith_project_name']
-        try:
-            index = sh.initialize_pinecone(index_name, pinecone_api_key)
-        except Exception as e:
-            st.sidebar.write("インデックスの初期化に失敗しました")
-            st.sidebar.write("エラーメッセージ: ", e)
-            index_name = None
-            return
-    else:
-        st.sidebar.write("インデックスがありません")
-        st.sidebar.write("新しいインデックスを作成してください")
-        index_name = None
+    # # インデックス情報を表示
+    # if 'user_index' in st.session_state and st.session_state['user_index']:
+    #     st.sidebar.write(f"Index Name: {st.session_state['user_index']['index_name']}")
+    #     st.sidebar.write(f"Langsmith Project Name: {st.session_state['user_index']['langsmith_project_name']}")
+    #     index_name = st.session_state['user_index']['index_name']
+    #     pinecone_api_key = st.session_state['user_index']['pinecone_api_key']
+    #     langsmith_project_name = st.session_state['user_index']['langsmith_project_name']
+    #     try:
+    #         index = sh.initialize_pinecone(index_name, pinecone_api_key)
+    #     except Exception as e:
+    #         st.sidebar.write("インデックスの初期化に失敗しました")
+    #         st.sidebar.write("エラーメッセージ: ", e)
+    #         index_name = None
+    #         return
+    # else:
+    #     st.sidebar.write("インデックスがありません")
+    #     st.sidebar.write("新しいインデックスを作成してください")
+    #     index_name = None
 
-    # プロンプト情報を表示
-    if 'prompt' in st.session_state:
-        st.sidebar.write("投稿プロンプト:")
-        st.sidebar.code(st.session_state['prompt']['system_prompt'], language='markdown')
-        st.sidebar.write("タイトル提案プロンプト:")
-        st.sidebar.code(st.session_state['prompt']['system_prompt_title_reccomend'], language='markdown')
-    else:
-        st.sidebar.write("プロンプトがありません")
-        st.sidebar.write("新しいプロンプトを作成してください")
-        return
+    # # プロンプト情報を表示
+    # if 'prompt' in st.session_state:
+    #     st.sidebar.write("投稿プロンプト:")
+    #     st.sidebar.code(st.session_state['prompt']['system_prompt'], language='markdown')
+    #     st.sidebar.write("タイトル提案プロンプト:")
+    #     st.sidebar.code(st.session_state['prompt']['system_prompt_title_reccomend'], language='markdown')
+    # else:
+    #     st.sidebar.write("プロンプトがありません")
+    #     st.sidebar.write("新しいプロンプトを作成してください")
+    #     return
 
     # タブセット1: "Input / Generated Script" を含むタブ
     tab1, tab2, tab3 = st.tabs(["プロット生成", "データ登録", "ネタ提案"])
