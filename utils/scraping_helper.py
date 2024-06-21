@@ -11,7 +11,6 @@ from PyPDF2 import PdfReader
 import langchain
 from openai import OpenAI
 import streamlit as st
-from example_plot import example_plot
 from langchain.chains import LLMChain
 from langchain.prompts import PromptTemplate
 from langchain_openai import ChatOpenAI
@@ -258,11 +257,10 @@ def store_pdf_data_in_pinecone(index, chunk_embeddings, chunks, pdf_file_name, n
         print(f"Saved: {vector['id']}")
 
 
-def generate_claude3_response(user_input, example_plot, system_prompt, results_ns1, results_ns2, results_ns3, results_ns4, results_ns5):
+def generate_claude3_response(user_input, system_prompt, results_ns1, results_ns2, results_ns3, results_ns4, results_ns5):
     client = anthropic.Client(
         api_key=st.secrets["ANTHROPIC_API_KEY"]
     )
-    example_plot = example_plot.replace("\n", "\\n")
     system_message = system_prompt.format(
         user_input=user_input,
         results_ns1=results_ns1,
@@ -270,7 +268,6 @@ def generate_claude3_response(user_input, example_plot, system_prompt, results_n
         results_ns3=results_ns3,
         results_ns4=results_ns4,
         results_ns5=results_ns5,
-        example_plot=example_plot
     )
     message = client.messages.create(
         model="claude-3-opus-20240229",
@@ -314,7 +311,7 @@ def generate_response_with_llm_for_multiple_namespaces(index, user_input, namesp
             results[ns] = "エラー: 検索結果が見つかりませんでした。"
 
     # プロンプトテンプレートの準備
-    prompt_template = PromptTemplate(template=system_prompt, input_variables=["user_input", "results_ns1", "results_ns2", "results_ns3", "results_ns4", "results_ns5", "example_plot"])
+    prompt_template = PromptTemplate(template=system_prompt, input_variables=["user_input", "results_ns1", "results_ns2", "results_ns3", "results_ns4", "results_ns5"])
 
     # LLMの選択
     if selected_llm == "GPT-4o":
@@ -329,12 +326,10 @@ def generate_response_with_llm_for_multiple_namespaces(index, user_input, namesp
                 "results_ns3": results.get('ns3', '情報なし'),
                 "results_ns4": results.get('ns4', '情報なし'),
                 "results_ns5": results.get('ns5', '情報なし'),
-                "example_plot": example_plot
             })
     else:
         response_text = generate_claude3_response(
             user_input,
-            example_plot,
             system_prompt,
             results.get('ns1', '情報なし'),
             results.get('ns2', '情報なし'),
