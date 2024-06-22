@@ -305,6 +305,9 @@ def generate_response_with_llm_for_multiple_namespaces(index, user_input, namesp
                     metadata = search_results['matches'][0]['metadata']
                     # 新しいメタデータ形式に基づいて内容を整形してLLMに渡す
                     results[ns] = "\n".join([f"{key}: {value}" for key, value in metadata.items()])
+            elif ns == "ns4":
+                # ns4の検索結果をそのまま使用
+                results[ns] = search_results
             else:
                 # 他の名前空間の処理は変更なし
                 result_texts = [result['metadata']['text_chunk'] for result in search_results['matches']]
