@@ -1,11 +1,6 @@
 import streamlit as st
 import streamlit.components.v1 as components
-from application.instagram_trend_post_service import InstagramTrendPostService
-from datetime import datetime, timezone, timedelta
 import re
-
-# サービスの初期化
-post_service = InstagramTrendPostService()
 
 # ページの設定
 st.set_page_config(
@@ -22,38 +17,41 @@ st.title('デザイン提案')
 tab1, tab2 = st.tabs(["今週のトレンド投稿", "Canvaデザイン"])
 
 with tab1:
-    st.header('今週のトレンド投稿')
+    st.header('今週のトレンド投稿(調整中)')
 
-    # 今週のトレンド投稿を取得
-    posts = post_service.get_weekly_trend_posts()
+    # InstagramのURLのリスト
+    instagram_urls = [
+        'https://www.instagram.com/p/C5az-xYv_8v',
+        'https://www.instagram.com/p/C5k1fixvMIP/?img_index=1',
+        'https://www.instagram.com/p/C5az-xYv_8v/?img_index=1',
+        'https://www.instagram.com/p/C5OJTpEvZ9v/?img_index=1',
+        'https://www.instagram.com/p/C5AwrsqOy_g/?img_index=1',
+        'https://www.instagram.com/p/C4xfOTDvHbV/?img_index=1',
+        'https://www.instagram.com/p/C4h3MGrJkaS/?img_index=1',
+        'https://www.instagram.com/p/C4c_DLNv5A6/?img_index=1',
+        'https://www.instagram.com/p/C4P4KrZvCFu/?img_index=1'
+    ]
 
-    if not posts:
-        st.write("今週のトレンド投稿はありません。")
-    else:
-        st.write(f"今週のトレンド投稿は{len(posts)}件あります。")
-        # 3列に分けて表示
-        col1, col2, col3 = st.columns(3)
+    # 3列に分けて表示
+    col1, col2, col3 = st.columns(3)
 
-        # リストの値を繰り返し表示
-        for i, post in enumerate(posts):
-            # URLを取得
-            url = post.get('image_url', '')
-
-            # /?\以降を削除
-            cleaned_url = re.sub(r'/\?.*', '', url)
-
-            # 最短の埋め込みコードを生成
-            embed_code = f'<blockquote class="instagram-media" data-instgrm-permalink="{cleaned_url}/" data-instgrm-version="14"><a href="{cleaned_url}/">この投稿をInstagramで見る</a></blockquote><script async src="//www.instagram.com/embed.js"></script>'
-
-            if i % 3 == 0:
-                with col1:
-                    components.html(embed_code, height=600)
-            elif i % 3 == 1:
-                with col2:
-                    components.html(embed_code, height=600)
-            else:
-                with col3:
-                    components.html(embed_code, height=600)
+    # リストの値を繰り返し表示
+    for i, url in enumerate(instagram_urls):
+        # /?\以降を削除
+        cleaned_url = re.sub(r'/\?.*', '', url)
+        
+        # 最短の埋め込みコードを生成
+        embed_code = f'<blockquote class="instagram-media" data-instgrm-permalink="{cleaned_url}/" data-instgrm-version="14"><a href="{cleaned_url}/">この投稿をInstagramで見る</a></blockquote><script async src="//www.instagram.com/embed.js"></script>'
+        
+        if i % 3 == 0:
+            with col1:
+                components.html(embed_code, height=600)
+        elif i % 3 == 1:
+            with col2:
+                components.html(embed_code, height=600)
+        else:
+            with col3:
+                components.html(embed_code, height=600)
 
 with tab2:
     st.header('Canvaデザイン')
@@ -100,13 +98,13 @@ with tab2:
           <iframe loading="lazy" style="position: absolute; width: 100%; height: 100%; top: 0; left: 0; border: none; padding: 0; margin: 0;" src="{item['embed_url']}?embed" allowfullscreen="allowfullscreen" allow="fullscreen"></iframe>
         </div>
         '''
-
+        
         button_code = f'''
         <div style="text-align: center; margin-top: 10px;">
           <a href="{item['button_url']}" target="_blank" style="background-color: #4CAF50; color: white; padding: 10px 20px; text-align: center; text-decoration: none; display: inline-block; border-radius: 4px;">テンプレを使用する</a>
         </div>
         '''
-
+        
         if i % 3 == 0:
             with col1:
                 components.html(canva_embed_code + button_code, height=500)
