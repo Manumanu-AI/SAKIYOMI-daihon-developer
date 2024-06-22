@@ -7,7 +7,6 @@ from application.user_index_service import UserIndexService
 from application.prompt_service import PromptService
 from utils.example_prompt import system_prompt_example, system_prompt_title_reccomend_example
 
-
 user_service = UserService()
 user_index_service = UserIndexService()
 prompt_service = PromptService()
@@ -163,7 +162,6 @@ def main():
                             sh.delete_all_data_in_namespace(index, "ns1")
                         except Exception:
                             pass
-
                         st.session_state['last_url'] = url
                         if url != "":  # URLが空欄でない場合のみスクレイピングを実行
                             scraped_data = sh.scrape_url(url)
@@ -193,11 +191,13 @@ def main():
             st.text_area("生成結果", value=displayed_value, height=400)
 
 
+
     # タブ2: パラメーター設定
     with tab2:
         st.header('データを登録')
         # 2カラムを作成
         col1, col2, col3, col4 = st.columns(4)
+
 
         with col1:
             st.subheader("URLの登録")
@@ -272,6 +272,7 @@ def main():
             # PDFファイルアップロード
             pdf_file2 = st.file_uploader("PDFファイルをアップロード", type=["pdf"], key="pdf_file2")
 
+
             # 登録ボタン
             register_button3 = st.button("PDF登録", key="register_button3")
 
@@ -324,7 +325,6 @@ def main():
 
             # 全データ削除ボタン
             delete_all_button4 = st.button("全データ削除", key="delete_all_4")
-
             if delete_all_button4:
                 # 全データを削除する関数を呼び出し
                 sh.delete_all_data_in_namespace(index, "ns5")
