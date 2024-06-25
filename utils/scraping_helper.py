@@ -304,8 +304,14 @@ def generate_response_with_llm_for_multiple_namespaces(index, user_input, namesp
                     results[ns] = "\n".join([f"{key}: {value}" for key, value in metadata.items()])
             else:
                 # 他の名前空間の処理は変更なし
-                result_texts = [result['metadata']['text_chunk'] for result in search_results['matches']]
-                results[ns] = " ".join(result_texts) if result_texts else "情報なし"
+                result_texts = [result['metadata'] for result in search_results['matches']]
+                if type(result_texts) == str:
+                    " ".join(result_texts) if result_texts else "情報なし"
+                elif type(result_texts) == dict:
+                    results[ns] = "\n".join([f"{key}: {value}" for key, value in result_texts.items()])
+                else:
+                    results[ns] = " ".join(str(result_texts)) if result_texts else "情報なし"
+
         except KeyError as e:
             print(f"エラーが発生しました: 名前空間 '{ns}' で {e} キーが見つかりません。")
             results[ns] = "エラー: 検索結果が見つかりませんでした。"
