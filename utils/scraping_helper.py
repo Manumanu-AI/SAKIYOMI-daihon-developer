@@ -306,11 +306,13 @@ def generate_response_with_llm_for_multiple_namespaces(index, user_input, namesp
                 # 他の名前空間の処理は変更なし
                 result_texts = [result['metadata'] for result in search_results['matches']]
                 if type(result_texts) == str:
-                    " ".join(result_texts) if result_texts else "情報なし"
+                    "".join(result_texts) if result_texts else "情報なし"
                 elif type(result_texts) == dict:
                     results[ns] = "\n".join([f"{key}: {value}" for key, value in result_texts.items()])
+                elif isinstance(result_texts, list) and all(isinstance(item, dict) for item in result_texts):
+                    results[ns] = "\n".join([f"{key}: {value}" for item in result_texts for key, value in item.items()])
                 else:
-                    results[ns] = " ".join(str(result_texts)) if result_texts else "情報なし"
+                    results[ns] = "".join(str(result_texts)) if result_texts else "情報なし"
 
         except KeyError as e:
             print(f"エラーが発生しました: 名前空間 '{ns}' で {e} キーが見つかりません。")
