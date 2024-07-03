@@ -7,27 +7,24 @@ from application.user_index_service import UserIndexService
 from application.prompt_service import PromptService
 from utils.example_prompt import system_prompt_example, system_prompt_title_reccomend_example
 
-
 user_service = UserService()
 user_index_service = UserIndexService()
 prompt_service = PromptService()
 env = st.secrets["ENV"]
 
-
 def main():
-
     st.set_page_config(
         page_icon='🤖',
         layout='wide',
     )
-
-    st.title('SAKIYOMI 投稿作成AI')
 
     if 'logged_in' not in st.session_state:
         st.session_state['logged_in'] = False
 
     # クエリパラメータからIDトークンを取得してログイン状態を維持
     query_params = st.experimental_get_query_params()
+    plan = query_params.get('plan', [''])[0]
+
     if 'id_token' in query_params and not st.session_state['logged_in']:
         id_token = query_params['id_token'][0]
         user_info_response = get_user_info(id_token)
@@ -44,17 +41,34 @@ def main():
                 st.session_state['user_index'] = None
 
             # プロンプトの取得
-            prompt_post = prompt_service.read_prompt(st.session_state['user_info']['localId'], type='feed_post')
-            prompt_title = prompt_service.read_prompt(st.session_state['user_info']['localId'], type='feed_theme')
-            if prompt_post['status'] == 'success' and prompt_title['status'] == 'success':
+            list_prompts = prompt_service.list_prompts(st.session_state['user_info']['localId'])
+
+            has_feed = any(prompt['type'] == 'feed_post' for prompt in list_prompts) and any(prompt['type'] == 'feed_theme' for prompt in list_prompts)
+            has_reel = any(prompt['type'] == 'reel_post' for prompt in list_prompts) and any(prompt['type'] == 'reel_theme' for prompt in list_prompts)
+
+            if has_feed and not has_reel:
+                plan = 'feed'
+            elif not has_feed and has_reel:
+                plan = 'reel'
+            elif has_feed and has_reel and not plan:
+                plan = 'feed'
+
+            if plan:
+                st.experimental_set_query_params(id_token=id_token, plan=plan)
+
+            if plan == 'feed':
+                prompt_post_feed = prompt_service.read_prompt(st.session_state['user_info']['localId'], type='feed_post')
+                prompt_theme_feed = prompt_service.read_prompt(st.session_state['user_info']['localId'], type='feed_theme')
                 st.session_state['prompt'] = {
-                    'system_prompt': prompt_post['data']['text'],
-                    'system_prompt_title_reccomend': prompt_title['data']['text']
+                    'system_prompt': prompt_post_feed['data']['text'] if prompt_post_feed['status'] == 'success' else system_prompt_example,
+                    'system_prompt_title_reccomend': prompt_theme_feed['data']['text'] if prompt_theme_feed['status'] == 'success' else system_prompt_title_reccomend_example
                 }
-            else:
+            elif plan == 'reel':
+                prompt_post_reel = prompt_service.read_prompt(st.session_state['user_info']['localId'], type='reel_post')
+                prompt_theme_reel = prompt_service.read_prompt(st.session_state['user_info']['localId'], type='reel_theme')
                 st.session_state['prompt'] = {
-                    'system_prompt': system_prompt_example,
-                    'system_prompt_title_reccomend': system_prompt_title_reccomend_example
+                    'system_prompt': prompt_post_reel['data']['text'] if prompt_post_reel['status'] == 'success' else system_prompt_example,
+                    'system_prompt_title_reccomend': prompt_theme_reel['data']['text'] if prompt_theme_reel['status'] == 'success' else system_prompt_title_reccomend_example
                 }
 
     if not st.session_state['logged_in']:
@@ -64,9 +78,7 @@ def main():
         login_button = st.sidebar.button('ログイン')
 
         if login_button:
-            # auth_response = sign_in(email, password)
             auth_response = user_service.login_user(email, password)
-            print(auth_response)
             if auth_response:
                 st.session_state['logged_in'] = True
                 st.session_state['id_token'] = auth_response['idToken']
@@ -78,7 +90,6 @@ def main():
                         st.session_state['user_index'] = user_index['data']
                     else:
                         st.session_state['user_index'] = None
-                    # クエリパラメータにIDトークンを設定し、その後にリロードをトリガーする
                     st.experimental_set_query_params(id_token=auth_response['idToken'])
                     st.sidebar.success('ログインに成功しました')
                     st.write('<meta http-equiv="refresh" content="0">', unsafe_allow_html=True)
@@ -92,23 +103,56 @@ def main():
 
     st.sidebar.title('ユーザー情報')
 
+    if 'has_feed' not in locals():
+        list_prompts = prompt_service.list_prompts(st.session_state['user_info']['localId'])
+        has_feed = any(prompt['type'] == 'feed_post' for prompt in list_prompts) and any(prompt['type'] == 'feed_theme' for prompt in list_prompts)
+        has_reel = any(prompt['type'] == 'reel_post' for prompt in list_prompts) and any(prompt['type'] == 'reel_theme' for prompt in list_prompts)
+
+    if plan == 'feed':
+        st.title('SAKIYOMI 投稿作成AI - フィード')
+    elif plan == 'reel':
+        st.title('SAKIYOMI 投稿作成AI - リール')
+    else:
+        st.title('SAKIYOMI 投稿作成AI')
+
+    if has_feed and has_reel:
+        st.sidebar.write("フィードとリール両方のプランに入っております")
+    elif has_feed and not has_reel:
+        st.sidebar.write("フィードプランには入っていますが、リールプランには入っていません。")
+    elif not has_feed and has_reel:
+        st.sidebar.write("リールプランには入っていますが、フィードプランには入っていません。")
+    else:
+        st.sidebar.write("フィードプランにもリールプランにも入っていないため、どちらかのプランに入ってください。")
+        return
+
+    if has_feed and has_reel:
+        options = {"フィード": "feed", "リール": "reel"}
+        selected_label = st.sidebar.radio("投稿タイプを選択", list(options.keys()), index=0 if plan == 'feed' else 1)
+        selected_plan = options[selected_label]
+
+        if selected_plan != plan:
+            st.experimental_set_query_params(id_token=query_params['id_token'][0], plan=selected_plan)
+            st.write('<meta http-equiv="refresh" content="0">', unsafe_allow_html=True)
+            return
+
+    elif not has_feed and not has_reel:
+        st.sidebar.write("フィードかリールのプランに登録してください")
+        return
+
     if st.sidebar.button('ログアウト'):
         st.session_state['logged_in'] = False
         st.session_state.pop('id_token', None)
         st.session_state.pop('user_info', None)
         st.session_state.pop('user_index', None)
-        # クエリパラメータをクリア
         st.experimental_set_query_params()
         st.sidebar.success('ログアウトしました')
         st.write('<meta http-equiv="refresh" content="0">', unsafe_allow_html=True)
         return
 
-    # ユーザー情報を表示
     if 'user_info' in st.session_state:
         if env == "develop":
             st.sidebar.write(f"User ID: {st.session_state['user_info']['email']}")
 
-    # インデックス情報を表示
     if 'user_index' in st.session_state and st.session_state['user_index']:
         if env == "develop":
             st.sidebar.write(f"Index Name: {st.session_state['user_index']['index_name']}")
@@ -128,7 +172,6 @@ def main():
         st.sidebar.write("新しいインデックスを作成してください")
         index_name = None
 
-    # プロンプト情報を表示
     if 'prompt' in st.session_state:
         if env == "develop":
             st.sidebar.write("投稿プロンプト:")
@@ -140,7 +183,6 @@ def main():
         st.sidebar.write("新しいプロンプトを作成してください")
         return
 
-    # タブセット1: "Input / Generated Script" を含むタブ
     tab1, tab2, tab3 = st.tabs(["プロット生成", "データ登録", "ネタ提案"])
 
     with tab1:
@@ -165,9 +207,8 @@ def main():
                             pass
 
                         st.session_state['last_url'] = url
-                        if url != "":  # URLが空欄でない場合のみスクレイピングを実行
+                        if url != "":
                             scraped_data = sh.scrape_url(url)
-
                             combined_text, metadata_list = sh.prepare_text_and_metadata(sh.extract_keys_from_json(scraped_data))
                             chunks = sh.split_text(combined_text)
                             embeddings = sh.make_chunks_embeddings(chunks)
@@ -188,149 +229,86 @@ def main():
                     else:
                         st.session_state['response_text'] = "エラー: プロットを生成できませんでした。"
 
-            # セッション状態からresponse_textを取得、存在しない場合はデフォルトのメッセージを表示
             displayed_value = st.session_state.get('response_text', "生成結果 : プロットが表示されます")
             st.text_area("生成結果", value=displayed_value, height=400)
 
-
-    # タブ2: パラメーター設定
     with tab2:
         st.header('データを登録')
-        # 2カラムを作成
         col1, col2, col3, col4 = st.columns(4)
 
         with col1:
             st.subheader("URLの登録")
-
-            # URL入力
             url = st.text_input("登録URLを入力してください")
-
-            # 登録ボタン
             register_button1 = st.button("URL登録")
 
             if register_button1:
-                # スクレイピング
                 scraped_data = sh.scrape_url(url)
-
-
                 combined_text, metadata_list = sh.prepare_text_and_metadata(sh.extract_keys_from_json(scraped_data))
-
-
                 chunks = sh.split_text(combined_text)
-
                 embeddings = sh.make_chunks_embeddings(chunks)
-
-                # Pineconeにデータを保存
                 sh.store_data_in_pinecone(index, embeddings, chunks, metadata_list, "ns2")
-
                 st.success("データをPineconeに登録しました！")
 
-            # 全データ削除ボタン
             delete_all_button1 = st.button("URL全データ削除")
 
             if delete_all_button1:
-                sh.delete_all_data_in_namespace(index, "ns2")  # 全データを削除する関数を呼び出し
+                sh.delete_all_data_in_namespace(index, "ns2")
                 st.success("全データが削除されました！")
-
 
         with col2:
             st.subheader("過去プロットの登録")
-
-            # PDFファイルアップロード
             pdf_file1 = st.file_uploader("PDFファイルをアップロード", type=["pdf"], key="pdf_file1")
-
-            # 登録ボタン
             register_button2 = st.button("PDF登録")
 
             if register_button2 and pdf_file1 is not None:
-                # PDFファイルからテキストを抽出
                 pdf_text = sh.extract_text_from_pdf(pdf_file1)
-
-                # テキストをチャンクに分割
                 chunks = sh.split_text(pdf_text)
-
-                # チャンクの埋め込みを生成
                 embeddings = sh.make_chunks_embeddings(chunks)
-
-
-                # Pineconeにデータを保存
                 sh.store_pdf_data_in_pinecone(index, embeddings, chunks, pdf_file1.name, "ns3")
                 st.success("データをPineconeに登録しました！")
 
-            # 全データ削除ボタン
             delete_all_button2 = st.button("全データ削除")
 
             if delete_all_button2:
-                # 全データを削除する関数を呼び出し
                 sh.delete_all_data_in_namespace(index, "ns3")
                 st.success("全データが削除されました！")
 
-
         with col3:
             st.subheader("競合データの登録")
-
-            # PDFファイルアップロード
             pdf_file2 = st.file_uploader("PDFファイルをアップロード", type=["pdf"], key="pdf_file2")
-
-            # 登録ボタン
             register_button3 = st.button("PDF登録", key="register_button3")
 
             if register_button3 and pdf_file2 is not None:
-                # PDFファイルからテキストを抽出
                 pdf_text = sh.extract_text_from_pdf(pdf_file2)
-
-                # テキストをチャンクに分割
                 chunks = sh.split_text(pdf_text)
-
-                # チャンクの埋め込みを生成
                 embeddings = sh.make_chunks_embeddings(chunks)
-
-
-                # Pineconeにデータを保存
-                sh.store_pdf_data_in_pinecone(index, embeddings,chunks, pdf_file2.name, "ns4")
+                sh.store_pdf_data_in_pinecone(index, embeddings, chunks, pdf_file2.name, "ns4")
                 st.success("データをPineconeに登録しました！")
 
-            # 全データ削除ボタン
             delete_all_button3 = st.button("全データ削除", key="delete_all_3")
 
             if delete_all_button3:
-                # 全データを削除する関数を呼び出し
                 sh.delete_all_data_in_namespace(index, "ns4")
                 st.success("全データが削除されました！")
 
         with col4:
             st.subheader("SAKIYOMIデータの登録")
-
-            # PDFファイルアップロード
             pdf_file3 = st.file_uploader("PDFをアップロード", type=["pdf"], key="pdf_file3")
-
-            # 登録ボタン
             register_button4 = st.button("PDF登録", key="register_button4")
 
             if register_button4 and pdf_file3 is not None:
-                # PDFファイルからテキストを抽出
                 pdf_text = sh.extract_text_from_pdf(pdf_file3)
-
-                # テキストをチャンクに分割
                 chunks = sh.split_text(pdf_text)
-
-                # チャンクの埋め込みを生成
                 embeddings = sh.make_chunks_embeddings(chunks)
-
-
-                # Pineconeにデータを保存
                 sh.store_pdf_data_in_pinecone(index, embeddings, chunks, pdf_file3.name, "ns5")
                 st.success("データをPineconeに登録しました！")
 
-            # 全データ削除ボタン
             delete_all_button4 = st.button("全データ削除", key="delete_all_4")
 
             if delete_all_button4:
-                # 全データを削除する関数を呼び出し
                 sh.delete_all_data_in_namespace(index, "ns5")
                 st.success("全データが削除されました！")
 
-    # テーマ提案タブ
     with tab3:
         st.header("投稿ネタ提案")
         col1, col2 = st.columns(2)
@@ -340,13 +318,11 @@ def main():
                 selected_llm_title = st.radio("LLMの選択", ("GPT-4o", "Claude3"), key="radio_llm_selection_title")
                 submit_button = st.form_submit_button("テーマ提案")
 
-        # 検索実行
         with col2:
             if submit_button:
                 with st.spinner('テーマ提案中...'):
                     if not user_query:
                         user_query = "*"
-                    # クエリの実行
                     query_results = sh.perform_similarity_search(index, user_query, "ns3", top_k=10)
                     titles = sh.get_search_results_titles(query_results)
                     original_titles = sh.generate_new_titles(user_query, titles, selected_llm_title, st.session_state['prompt']['system_prompt_title_reccomend'])
