@@ -37,4 +37,4 @@ class PromptService:
         return self.prompt_repo.delete_prompt(user_id, type)
 
     def list_prompts(self, user_id: str) -> Dict[str, Any]:
-        return self.prompt_repo.list_prompts(user_id)
+        return self.prompt_repo.list_prompts(user_id)["data"]
