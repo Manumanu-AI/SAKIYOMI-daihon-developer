@@ -33,13 +33,6 @@ def main():
             st.session_state['id_token'] = id_token
             st.session_state['user_info'] = user_info_response['users'][0]
 
-            # ユーザーインデックスの取得
-            user_index = user_index_service.read_user_index(st.session_state['user_info']['localId'])
-            if user_index['status'] == 'success':
-                st.session_state['user_index'] = user_index['data']
-            else:
-                st.session_state['user_index'] = None
-
             # プロンプトの取得
             list_prompts = prompt_service.list_prompts(st.session_state['user_info']['localId'])
 
@@ -63,6 +56,13 @@ def main():
                     'system_prompt': prompt_post_feed['data']['text'] if prompt_post_feed['status'] == 'success' else system_prompt_example,
                     'system_prompt_title_reccomend': prompt_theme_feed['data']['text'] if prompt_theme_feed['status'] == 'success' else system_prompt_title_reccomend_example
                 }
+                # ユーザーインデックスの取得
+                user_index = user_index_service.read_user_index(st.session_state['user_info']['localId'], 'feed')
+                if user_index['status'] == 'success':
+                    st.session_state['user_index'] = user_index['data']
+                else:
+                    st.session_state['user_index'] = None
+
             elif plan == 'reel':
                 prompt_post_reel = prompt_service.read_prompt(st.session_state['user_info']['localId'], type='reel_post')
                 prompt_theme_reel = prompt_service.read_prompt(st.session_state['user_info']['localId'], type='reel_theme')
@@ -70,6 +70,12 @@ def main():
                     'system_prompt': prompt_post_reel['data']['text'] if prompt_post_reel['status'] == 'success' else system_prompt_example,
                     'system_prompt_title_reccomend': prompt_theme_reel['data']['text'] if prompt_theme_reel['status'] == 'success' else system_prompt_title_reccomend_example
                 }
+                # ユーザーインデックスの取得
+                user_index = user_index_service.read_user_index(st.session_state['user_info']['localId'], 'reel')
+                if user_index['status'] == 'success':
+                    st.session_state['user_index'] = user_index['data']
+                else:
+                    st.session_state['user_index'] = None
 
     if not st.session_state['logged_in']:
         st.sidebar.title('ログイン')
@@ -85,11 +91,6 @@ def main():
                 user_info_response = get_user_info(auth_response['idToken'])
                 if user_info_response:
                     st.session_state['user_info'] = user_info_response['users'][0]
-                    user_index = user_index_service.read_user_index(st.session_state['user_info']['localId'])
-                    if user_index['status'] == 'success':
-                        st.session_state['user_index'] = user_index['data']
-                    else:
-                        st.session_state['user_index'] = None
                     st.experimental_set_query_params(id_token=auth_response['idToken'])
                     st.sidebar.success('ログインに成功しました')
                     st.write('<meta http-equiv="refresh" content="0">', unsafe_allow_html=True)
