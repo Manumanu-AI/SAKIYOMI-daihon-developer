@@ -10,7 +10,7 @@ from utils.example_prompt import system_prompt_example, system_prompt_title_recc
 user_service = UserService()
 user_index_service = UserIndexService()
 prompt_service = PromptService()
-env = st.secrets["ENV"]
+env = st.secrets.get("ENV", "")
 
 def main():
     st.set_page_config(
