@@ -1,10 +1,10 @@
 # application/insight_service.py
 
-import logging
+import uuid
+from datetime import datetime
 from infrastructure.insight_repository import InsightRepository
 from domain.insight import Insight
 from typing import List, Dict, Any
-import pydantic
 
 class InsightService:
     def __init__(self):
