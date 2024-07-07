@@ -1,3 +1,5 @@
+# pages/5_インサイト分析.py
+
 import streamlit as st
 import pandas as pd
 from application.insight_service import InsightService
@@ -24,8 +26,7 @@ def main():
             column_config={
                 "post_id": st.column_config.TextColumn(
                     "Post ID",
-                    disabled=True,
-                    help="This is a unique identifier and cannot be changed."
+                    disabled=True,  # この列を編集不可に設定
                 ),
                 "created_at": st.column_config.DatetimeColumn(
                     "Created At",
@@ -62,8 +63,18 @@ def main():
         )
 
         if st.button("保存"):
-            # 変更されたデータの保存処理
-            # ... (以前のコードと同様)
+            # 変更されたデータの保存
+            for index, row in edited_df.iterrows():
+                insight_dict = row.to_dict()
+                insight_dict['created_at'] = insight_dict['created_at'].to_pydatetime()
+                insight = Insight.from_dict(insight_dict)
+                result = service.update_insight(insight.post_id, insight)
+                if result["status"] == "success":
+                    st.success(f"Post {insight.post_id} updated successfully")
+                else:
+                    st.error(f"Failed to update post {insight.post_id}")
+    else:
+        st.info("インサイトデータがありません。")
 
 if __name__ == "__main__":
     main()
