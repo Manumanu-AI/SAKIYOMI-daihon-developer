@@ -13,12 +13,12 @@ class InsightRepository:
         user_ref = self.db.collection('users').document(user_id)
         insights_ref = user_ref.collection('insight_data')
         docs = insights_ref.stream()
-        return [Insight(**doc.to_dict()) for doc in docs]
+        return [Insight.from_dict(doc.to_dict()) for doc in docs]
 
     def update_insight(self, user_id: str, insight: Insight) -> Dict[str, Any]:
         user_ref = self.db.collection('users').document(user_id)
         doc_ref = user_ref.collection('insight_data').document(insight.post_id)
-        doc_ref.set(insight.dict())
+        doc_ref.set(insight.dict(exclude_unset=True))
         return {"status": "success", "message": "Insight updated successfully"}
 
     def get_user_ids(self) -> List[str]:
