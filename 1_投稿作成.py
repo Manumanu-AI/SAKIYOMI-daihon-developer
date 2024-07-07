@@ -111,18 +111,18 @@ def main():
         has_reel = any(prompt['type'] == 'reel_post' for prompt in list_prompts) and any(prompt['type'] == 'reel_theme' for prompt in list_prompts)
 
     if plan == 'feed':
-        st.title('SAKIYOMI 投稿作成AI - フィード')
+        st.title('SAKIYOMI Intelligence - フィード')
     elif plan == 'reel':
-        st.title('SAKIYOMI 投稿作成AI - リール')
+        st.title('SAKIYOMI Intelligence - リール')
     else:
-        st.title('SAKIYOMI 投稿作成AI')
+        st.title('SAKIYOMI Intelligence')
 
     if has_feed and has_reel:
-        st.sidebar.write("フィードとリール両方のプランに入っております")
+        st.sidebar.write("プラン : フィード&リール")
     elif has_feed and not has_reel:
-        st.sidebar.write("フィードプランには入っていますが、リールプランには入っていません。")
+        st.sidebar.write("プラン : フィードのみ")
     elif not has_feed and has_reel:
-        st.sidebar.write("リールプランには入っていますが、フィードプランには入っていません。")
+        st.sidebar.write("プラン : リールのみ")
     else:
         st.sidebar.write("フィードプランにもリールプランにも入っていないため、どちらかのプランに入ってください。")
         return
