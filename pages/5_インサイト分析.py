@@ -8,15 +8,24 @@ from domain.insight import Insight
 def main():
     st.title("インサイトデータ表示")
 
-    if 'user_id' not in st.session_state or not st.session_state.user_id:
+    # ログイン状態のチェック
+    if 'logged_in' not in st.session_state or not st.session_state['logged_in']:
         st.warning("ログインしていません。先にログインしてください。")
+        return
+
+    # ユーザーIDの取得
+    user_id = st.session_state.get('user_info', {}).get('localId')
+    if not user_id:
+        st.error("ユーザー情報が見つかりません。再度ログインしてください。")
         return
 
     service = InsightService()
 
     if 'insights_df' not in st.session_state:
-        insights = service.get_insights_by_user(st.session_state.user_id)
+        insights = service.get_insights_by_user(user_id)
         st.session_state.insights_df = pd.DataFrame([insight.dict() for insight in insights])
+
+    # 以下、既存のコードと同様...
 
     if not st.session_state.insights_df.empty:
         st.session_state.insights_df['created_at'] = pd.to_datetime(st.session_state.insights_df['created_at'])
@@ -39,7 +48,7 @@ def main():
 
         if st.button("行を挿入"):
             try:
-                new_insight = service.create_new_insight(st.session_state.user_id)
+                new_insight = service.create_new_insight(user_id)
                 new_row = pd.DataFrame([new_insight.dict()])
                 st.session_state.insights_df = pd.concat([st.session_state.insights_df, new_row], ignore_index=True)
                 st.success(f"新しい行が追加されました。Post ID: {new_insight.post_id}")
