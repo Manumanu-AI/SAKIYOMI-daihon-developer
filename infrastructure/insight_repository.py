@@ -34,3 +34,8 @@ class InsightRepository:
     def get_user_ids(self) -> List[str]:
         users = self.db.collection('users').stream()
         return [user.id for user in users]
+
+    def create_insight(self, insight: Insight) -> Dict[str, Any]:
+        doc_ref = self.db.collection('insight_data').document(insight.post_id)
+        doc_ref.set(insight.dict())
+        return {"status": "success", "message": "New insight created successfully"}
