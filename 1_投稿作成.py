@@ -78,28 +78,29 @@ def main():
                     st.session_state['user_index'] = None
 
     if not st.session_state['logged_in']:
-        st.title('ログイン')
-        email = st.text_input('Email')
-        password = st.text_input('Password', type='password')
-        login_button = st.button('ログイン')
+        st.markdown("# SAKIYOMI Intelligence")
+        with st.container():
+            st.subheader('ログインして始める')
+            email = st.text_input('Email')
+            password = st.text_input('Password', type='password')
+            login_button = st.button('ログイン')
 
-        if login_button:
-            auth_response = user_service.login_user(email, password)
-            if auth_response:
-                st.session_state['logged_in'] = True
-                st.session_state['id_token'] = auth_response['idToken']
-                user_info_response = get_user_info(auth_response['idToken'])
-                if user_info_response:
-                    st.session_state['user_info'] = user_info_response['users'][0]
-                    st.experimental_set_query_params(id_token=auth_response['idToken'])
-                    st.success('ログインに成功しました')
-                    st.write('<meta http-equiv="refresh" content="0">', unsafe_allow_html=True)
+            if login_button:
+                auth_response = user_service.login_user(email, password)
+                if auth_response:
+                    st.session_state['logged_in'] = True
+                    st.session_state['id_token'] = auth_response['idToken']
+                    user_info_response = get_user_info(auth_response['idToken'])
+                    if user_info_response:
+                        st.session_state['user_info'] = user_info_response['users'][0]
+                        st.experimental_set_query_params(id_token=auth_response['idToken'])
+                        st.success('ログインに成功しました')
+                        st.write('<meta http-equiv="refresh" content="0">', unsafe_allow_html=True)
+                    else:
+                        st.error('ユーザー情報の取得に失敗しました')
                 else:
-                    st.error('ユーザー情報の取得に失敗しました')
-            else:
-                st.error('ログインに失敗しました')
+                    st.error('ログインに失敗しました')
 
-        st.write("## SAKIYOMI 投稿 AI へようこそ！ログインしてください。")
         return
 
     st.sidebar.title('ユーザー情報')
