@@ -8,26 +8,31 @@ from domain.insight import Insight
 def main():
     st.title("インサイトデータ表示")
 
-    # ログイン状態のチェック
     if 'logged_in' not in st.session_state or not st.session_state['logged_in']:
         st.warning("ログインしていません。先にログインしてください。")
         return
 
-    # ユーザーIDの取得
     user_id = st.session_state.get('user_info', {}).get('localId')
     if not user_id:
         st.error("ユーザー情報が見つかりません。再度ログインしてください。")
         return
 
+    st.write(f"ログインユーザーID: {user_id}")  # デバッグ情報
+
     service = InsightService()
 
     if 'insights_df' not in st.session_state:
         insights = service.get_insights_by_user(user_id)
-        st.session_state.insights_df = pd.DataFrame([insight.dict() for insight in insights])
-
-    # 以下、既存のコードと同様...
+        st.write(f"取得したインサイトデータ数: {len(insights)}")  # デバッグ情報
+        if insights:
+            st.session_state.insights_df = pd.DataFrame([insight.dict() for insight in insights])
+            st.write("データフレームを作成しました")  # デバッグ情報
+        else:
+            st.session_state.insights_df = pd.DataFrame()
+            st.write("空のデータフレームを作成しました")  # デバッグ情報
 
     if not st.session_state.insights_df.empty:
+        st.write(f"データフレームの行数: {len(st.session_state.insights_df)}")  # デバッグ情報
         st.session_state.insights_df['created_at'] = pd.to_datetime(st.session_state.insights_df['created_at'])
 
         edited_df = st.data_editor(
@@ -67,9 +72,14 @@ def main():
                     st.error(f"Failed to update post {insight.post_id}")
             
             st.session_state.insights_df = edited_df
-
     else:
         st.info("インサイトデータがありません。")
+
+    # デバッグ情報の表示
+    st.write("--- デバッグ情報 ---")
+    st.write(f"セッション状態: {st.session_state}")
+    if 'insights_df' in st.session_state:
+        st.write(f"insights_df の内容: {st.session_state.insights_df.to_dict()}")
 
 if __name__ == "__main__":
     main()
