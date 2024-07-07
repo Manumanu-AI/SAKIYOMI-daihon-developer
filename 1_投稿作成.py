@@ -78,28 +78,29 @@ def main():
                     st.session_state['user_index'] = None
 
     if not st.session_state['logged_in']:
-        st.sidebar.title('ログイン')
-        email = st.sidebar.text_input('Email')
-        password = st.sidebar.text_input('Password', type='password')
-        login_button = st.sidebar.button('ログイン')
+        st.markdown("# SAKIYOMI Intelligence")
+        with st.container():
+            st.empty()
+            email = st.text_input('Email')
+            password = st.text_input('Password', type='password')
+            login_button = st.button('ログイン')
 
-        if login_button:
-            auth_response = user_service.login_user(email, password)
-            if auth_response:
-                st.session_state['logged_in'] = True
-                st.session_state['id_token'] = auth_response['idToken']
-                user_info_response = get_user_info(auth_response['idToken'])
-                if user_info_response:
-                    st.session_state['user_info'] = user_info_response['users'][0]
-                    st.experimental_set_query_params(id_token=auth_response['idToken'])
-                    st.sidebar.success('ログインに成功しました')
-                    st.write('<meta http-equiv="refresh" content="0">', unsafe_allow_html=True)
+            if login_button:
+                auth_response = user_service.login_user(email, password)
+                if auth_response:
+                    st.session_state['logged_in'] = True
+                    st.session_state['id_token'] = auth_response['idToken']
+                    user_info_response = get_user_info(auth_response['idToken'])
+                    if user_info_response:
+                        st.session_state['user_info'] = user_info_response['users'][0]
+                        st.experimental_set_query_params(id_token=auth_response['idToken'])
+                        st.success('ログインに成功しました')
+                        st.write('<meta http-equiv="refresh" content="0">', unsafe_allow_html=True)
+                    else:
+                        st.error('ユーザー情報の取得に失敗しました')
                 else:
-                    st.sidebar.error('ユーザー情報の取得に失敗しました')
-            else:
-                st.sidebar.error('ログインに失敗しました')
+                    st.error('ログインに失敗しました')
 
-        st.write("## SAKIYOMI 投稿 AI へようこそ！ログインしてください。")
         return
 
     st.sidebar.title('ユーザー情報')
@@ -110,18 +111,18 @@ def main():
         has_reel = any(prompt['type'] == 'reel_post' for prompt in list_prompts) and any(prompt['type'] == 'reel_theme' for prompt in list_prompts)
 
     if plan == 'feed':
-        st.title('SAKIYOMI 投稿作成AI - フィード')
+        st.title('SAKIYOMI Intelligence - フィード')
     elif plan == 'reel':
-        st.title('SAKIYOMI 投稿作成AI - リール')
+        st.title('SAKIYOMI Intelligence - リール')
     else:
-        st.title('SAKIYOMI 投稿作成AI')
+        st.title('SAKIYOMI Intelligence')
 
     if has_feed and has_reel:
-        st.sidebar.write("フィードとリール両方のプランに入っております")
+        st.sidebar.write("プラン : フィード&リール")
     elif has_feed and not has_reel:
-        st.sidebar.write("フィードプランには入っていますが、リールプランには入っていません。")
+        st.sidebar.write("プラン : フィードのみ")
     elif not has_feed and has_reel:
-        st.sidebar.write("リールプランには入っていますが、フィードプランには入っていません。")
+        st.sidebar.write("プラン : リールのみ")
     else:
         st.sidebar.write("フィードプランにもリールプランにも入っていないため、どちらかのプランに入ってください。")
         return
