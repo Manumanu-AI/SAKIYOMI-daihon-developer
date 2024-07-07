@@ -1,20 +1,19 @@
+# domain/insight.py
+
 from pydantic import BaseModel, Field
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Any
 
 class Insight(BaseModel):
-    post_id: str
-    created_at: datetime
-    first_view: str
-    followers_reach_count: int
-    like_count: int
-    new_reach_count: int
+    post_id: Optional[str] = None
+    created_at: Optional[datetime] = None
+    first_view: Optional[str] = None
+    followers_reach_count: Optional[int] = None
+    like_count: Optional[int] = None
+    new_reach_count: Optional[int] = None
     plot: Optional[str] = None
-    reach_count: str  # 文字列として保存されているため
-    save_count: int
-
-    class Config:
-        arbitrary_types_allowed = True
+    reach_count: Optional[Any] = None  # Any型を使用して柔軟に対応
+    save_count: Optional[int] = None
 
     @classmethod
     def from_dict(cls, data: dict):
