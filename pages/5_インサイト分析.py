@@ -8,10 +8,12 @@ from domain.insight import Insight
 def main():
     st.title("インサイトデータ表示")
 
+    # ログイン状態のチェック
     if 'logged_in' not in st.session_state or not st.session_state['logged_in']:
         st.warning("ログインしていません。先にログインしてください。")
         return
 
+    # ユーザーIDの取得
     user_id = st.session_state.get('user_info', {}).get('localId')
     if not user_id:
         st.error("ユーザー情報が見つかりません。再度ログインしてください。")
@@ -19,29 +21,17 @@ def main():
 
     service = InsightService()
 
-    # デバッグ情報
-    st.write(f"User ID: {user_id}")
+    if 'insights_df' not in st.session_state:
+        insights = service.get_insights_by_user(user_id)
+        st.session_state.insights_df = pd.DataFrame([insight.dict() for insight in insights])
 
-    # インサイトデータの取得
-    insights = service.get_insights_by_user(user_id)
-    
-    # デバッグ情報
-    st.write(f"取得したインサイトデータの数: {len(insights)}")
+    # 以下、既存のコードと同様...
 
-    if insights:
-        # DataFrameの作成
-        df = pd.DataFrame([insight.dict() for insight in insights])
-        
-        # デバッグ情報
-        st.write("データフレームの内容:")
-        st.write(df)
+    if not st.session_state.insights_df.empty:
+        st.session_state.insights_df['created_at'] = pd.to_datetime(st.session_state.insights_df['created_at'])
 
-        # 日時列の形式を調整
-        df['created_at'] = pd.to_datetime(df['created_at'])
-
-        # 編集可能な表の表示
         edited_df = st.data_editor(
-            df,
+            st.session_state.insights_df,
             column_config={
                 "post_id": st.column_config.TextColumn("Post ID", disabled=True),
                 "user_id": st.column_config.TextColumn("User ID", disabled=True),
@@ -60,7 +50,7 @@ def main():
             try:
                 new_insight = service.create_new_insight(user_id)
                 new_row = pd.DataFrame([new_insight.dict()])
-                df = pd.concat([df, new_row], ignore_index=True)
+                st.session_state.insights_df = pd.concat([st.session_state.insights_df, new_row], ignore_index=True)
                 st.success(f"新しい行が追加されました。Post ID: {new_insight.post_id}")
             except Exception as e:
                 st.error(f"行の挿入中にエラーが発生しました: {str(e)}")
@@ -76,7 +66,7 @@ def main():
                 else:
                     st.error(f"Failed to update post {insight.post_id}")
             
-            df = edited_df
+            st.session_state.insights_df = edited_df
 
     else:
         st.info("インサイトデータがありません。")
