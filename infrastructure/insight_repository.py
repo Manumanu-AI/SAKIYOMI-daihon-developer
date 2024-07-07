@@ -1,3 +1,6 @@
+# infrastructure/insight_repository.py
+
+import logging
 from firebase_admin import firestore
 from domain.insight import Insight
 from typing import List, Dict, Any
@@ -13,9 +16,14 @@ class InsightRepository:
         for user_doc in users_ref.stream():
             insight_collection = user_doc.reference.collection('insight_data')
             for insight_doc in insight_collection.stream():
-                insight_data = insight_doc.to_dict()
-                insight_data['post_id'] = insight_doc.id
-                insights.append(Insight.from_dict(insight_data))
+                raw_data = insight_doc.to_dict()
+                logging.info(f"Raw Firestore data: {raw_data}")
+                try:
+                    insight = Insight.from_dict(raw_data)
+                    insights.append(insight)
+                except Exception as e:
+                    logging.error(f"Error creating Insight object: {e}")
+                    logging.error(f"Problematic data: {raw_data}")
         return insights
 
     def update_insight(self, user_id: str, insight: Insight) -> Dict[str, Any]:
