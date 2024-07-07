@@ -80,7 +80,7 @@ def main():
     if not st.session_state['logged_in']:
         st.markdown("# SAKIYOMI Intelligence")
         with st.container():
-            st.markdown('ログインして始める')
+            st.empty()
             email = st.text_input('Email')
             password = st.text_input('Password', type='password')
             login_button = st.button('ログイン')
