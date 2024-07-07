@@ -28,7 +28,7 @@ def main():
     st.sidebar.write(f"ユーザーID: {user_id}")
 
     try:
-        # ログイン後、毎回インサイトデータを取得
+        # ログイン後、特定のユーザーのインサイトデータを取得
         insights = service.get_insights_by_user(user_id)
         st.sidebar.write(f"取得したインサイト数: {len(insights)}")
         
