@@ -27,10 +27,11 @@ class InsightService:
     def get_user_ids(self) -> List[str]:
         return self.repository.get_user_ids()
 
-    def create_new_insight(self) -> Insight:
+    def create_new_insight(self, user_id: str) -> Insight:
         new_post_id = str(uuid.uuid4())
         new_insight = Insight(
             post_id=new_post_id,
+            user_id=user_id,  # ユーザーIDを追加
             created_at=datetime.now(),
             first_view="",
             followers_reach_count=0,
@@ -42,3 +43,9 @@ class InsightService:
         )
         self.repository.create_insight(new_insight)
         return new_insight
+
+    def get_insights_by_user(self, user_id: str) -> List[Insight]:
+        return self.repository.get_insights_by_user(user_id)
+
+    def update_insight(self, insight: Insight) -> Dict[str, Any]:
+        return self.repository.update_insight(insight)
