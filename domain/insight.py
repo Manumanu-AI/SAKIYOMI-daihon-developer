@@ -2,18 +2,22 @@
 
 from pydantic import BaseModel, Field
 from datetime import datetime
-from typing import Optional, Any
+from typing import Optional
 
 class Insight(BaseModel):
-    post_id: Optional[str] = None
-    created_at: Optional[datetime] = None
-    first_view: Optional[str] = None
-    followers_reach_count: Optional[int] = None
-    like_count: Optional[int] = None
-    new_reach_count: Optional[int] = None
+    post_id: str
+    user_id: str  # 新しく追加
+    created_at: datetime
+    first_view: str
+    followers_reach_count: int
+    like_count: int
+    new_reach_count: int
     plot: Optional[str] = None
-    reach_count: Optional[Any] = None  # Any型を使用して柔軟に対応
-    save_count: Optional[int] = None
+    reach_count: int
+    save_count: int
+
+    class Config:
+        arbitrary_types_allowed = True
 
     @classmethod
     def from_dict(cls, data: dict):
