@@ -1,5 +1,3 @@
-# infrastructure/insight_repository.py
-
 from firebase_admin import firestore
 from domain.insight import Insight
 from typing import List, Dict, Any
@@ -9,15 +7,19 @@ class InsightRepository:
     def __init__(self):
         self.db = db
 
-    def get_all_insights(self, user_id: str) -> List[Insight]:
-        user_ref = self.db.collection('users').document(user_id)
-        insights_ref = user_ref.collection('insight_data')
-        docs = insights_ref.stream()
-        return [Insight.from_dict(doc.to_dict()) for doc in docs]
+    def get_all_insights(self) -> List[Insight]:
+        insights = []
+        users_ref = self.db.collection('users')
+        for user_doc in users_ref.stream():
+            insight_collection = user_doc.reference.collection('insight_data')
+            for insight_doc in insight_collection.stream():
+                insight_data = insight_doc.to_dict()
+                insight_data['post_id'] = insight_doc.id
+                insights.append(Insight.from_dict(insight_data))
+        return insights
 
     def update_insight(self, user_id: str, insight: Insight) -> Dict[str, Any]:
-        user_ref = self.db.collection('users').document(user_id)
-        doc_ref = user_ref.collection('insight_data').document(insight.post_id)
+        doc_ref = self.db.collection('users').document(user_id).collection('insight_data').document(insight.post_id)
         doc_ref.set(insight.dict(exclude_unset=True))
         return {"status": "success", "message": "Insight updated successfully"}
 
