@@ -10,23 +10,29 @@ def main():
 
     service = InsightService()
 
-    # データの取得
-    insights = service.get_all_insights()
+    if 'insights_df' not in st.session_state:
+        insights = service.get_all_insights()
+        st.session_state.insights_df = pd.DataFrame([insight.dict() for insight in insights])
 
-    if insights:
-        # DataFrameの作成
-        df = pd.DataFrame([insight.dict() for insight in insights])
+    # 「行を挿入」ボタン
+    if st.button("行を挿入"):
+        new_insight = service.create_new_insight()
+        new_row = pd.DataFrame([new_insight.dict()])
+        st.session_state.insights_df = pd.concat([st.session_state.insights_df, new_row], ignore_index=True)
+        st.success(f"新しい行が追加されました。Post ID: {new_insight.post_id}")
 
+    # DataFrameの表示と編集
+    if not st.session_state.insights_df.empty:
         # 日時列の形式を調整
-        df['created_at'] = pd.to_datetime(df['created_at'])
+        st.session_state.insights_df['created_at'] = pd.to_datetime(st.session_state.insights_df['created_at'])
 
         # 編集可能な表の表示
         edited_df = st.data_editor(
-            df,
+            st.session_state.insights_df,
             column_config={
                 "post_id": st.column_config.TextColumn(
                     "Post ID",
-                    disabled=True,  # この列を編集不可に設定
+                    disabled=True,
                 ),
                 "created_at": st.column_config.DatetimeColumn(
                     "Created At",
@@ -60,6 +66,7 @@ def main():
                 ),
             },
             hide_index=True,
+            num_rows="dynamic",
         )
 
         if st.button("保存"):
@@ -73,6 +80,9 @@ def main():
                     st.success(f"Post {insight.post_id} updated successfully")
                 else:
                     st.error(f"Failed to update post {insight.post_id}")
+            
+            # セッションステートのDataFrameを更新
+            st.session_state.insights_df = edited_df
     else:
         st.info("インサイトデータがありません。")
 
