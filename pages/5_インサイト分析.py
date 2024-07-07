@@ -4,6 +4,7 @@ import streamlit as st
 import pandas as pd
 from application.insight_service import InsightService
 from domain.insight import Insight
+from datetime import datetime
 
 def main():
     st.title("インサイトデータ表示")
@@ -23,15 +24,52 @@ def main():
             df = pd.DataFrame([insight.dict() for insight in insights])
 
             # 日時列の形式を調整
-            df['created_at'] = pd.to_datetime(df['created_at']).dt.strftime('%Y-%m-%d %H:%M:%S')
+            df['created_at'] = pd.to_datetime(df['created_at'])
 
             # 編集可能な表の表示
-            edited_df = st.data_editor(df)
+            edited_df = st.data_editor(
+                df,
+                column_config={
+                    "created_at": st.column_config.DatetimeColumn(
+                        "Created At",
+                        format="YYYY-MM-DD HH:mm:ss",
+                        step=60,
+                    ),
+                    "followers_reach_count": st.column_config.NumberColumn(
+                        "Followers Reach Count",
+                        min_value=0,
+                        step=1,
+                    ),
+                    "like_count": st.column_config.NumberColumn(
+                        "Like Count",
+                        min_value=0,
+                        step=1,
+                    ),
+                    "new_reach_count": st.column_config.NumberColumn(
+                        "New Reach Count",
+                        min_value=0,
+                        step=1,
+                    ),
+                    "reach_count": st.column_config.NumberColumn(
+                        "Reach Count",
+                        min_value=0,
+                        step=1,
+                    ),
+                    "save_count": st.column_config.NumberColumn(
+                        "Save Count",
+                        min_value=0,
+                        step=1,
+                    ),
+                },
+                hide_index=True,
+            )
 
             if st.button("保存"):
                 # 変更されたデータの保存
                 for index, row in edited_df.iterrows():
-                    insight = Insight(**row.to_dict())
+                    insight_dict = row.to_dict()
+                    insight_dict['created_at'] = insight_dict['created_at'].timestamp()
+                    insight = Insight.from_dict(insight_dict)
                     result = service.update_insight(selected_user_id, insight)
                     if result["status"] == "success":
                         st.success(f"Post {insight.post_id} updated successfully")
