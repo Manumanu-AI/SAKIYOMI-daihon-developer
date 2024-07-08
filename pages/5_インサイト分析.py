@@ -219,24 +219,24 @@ def main():
             else:
                 st.info("削除するデータがありません。先にデータを追加してください。")
 
-            st.markdown("---")
+        st.markdown("---")
 
-            # AI分析セクション
-            st.markdown("### AI分析")
+        # AI分析セクション
+        st.markdown("### AI分析")
 
-            # 大きめのテキストボックス
-            analysis_query = st.text_area("分析したい内容を入力してください", height=150)
+        # 大きめのテキストボックス
+        analysis_query = st.text_area("分析したい内容を入力してください", height=150)
 
-            # 「分析を開始する」ボタンを左下に配置
-            col1, col2, col3 = st.columns([1, 1, 1])
-            with col1:
-                if st.button("分析を開始する", use_container_width=True):
-                    if analysis_query:
-                        # ここにAI分析のロジックを実装
-                        st.info("AI分析を開始しました。結果が表示されるまでお待ちください。")
-                        # 実際のAI分析結果を表示する処理をここに追加
-                    else:
-                        st.warning("分析内容を入力してください。")
+        # 「分析を開始する」ボタンを左下に配置
+        col1, col2, col3 = st.columns([1, 1, 1])
+        with col1:
+            if st.button("分析を開始する", use_container_width=True):
+                if analysis_query:
+                    # ここにAI分析のロジックを実装
+                    st.info("AI分析を開始しました。結果が表示されるまでお待ちください。")
+                    # 実際のAI分析結果を表示する処理をここに追加
+                else:
+                    st.warning("分析内容を入力してください。")
 
     except Exception as e:
         st.error(f"エラーが発生しました: {str(e)}")
