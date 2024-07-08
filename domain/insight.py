@@ -2,6 +2,7 @@
 
 from pydantic import BaseModel, Field
 from datetime import datetime
+from typing import Optional
 import random
 import string
 
@@ -11,23 +12,24 @@ def generate_post_id():
 class Insight(BaseModel):
     post_id: str = Field(default_factory=generate_post_id)
     user_id: str
-    created_at: datetime
-    posted_at: datetime  # 新しく追加
-    post_url: str  # first_viewをpost_urlに変更
-    followers_reach_count: int
-    like_count: int
-    new_reach_count: int
-    plot: str
-    reach_count: int
-    save_count: int
+    created_at: Optional[datetime] = None
+    posted_at: Optional[datetime] = None
+    post_url: Optional[str] = Field(None, alias='first_view')
+    followers_reach_count: Optional[int] = None
+    like_count: Optional[int] = None
+    new_reach_count: Optional[int] = None
+    plot: Optional[str] = None
+    reach_count: Optional[int] = None
+    save_count: Optional[int] = None
+    example_plot: Optional[str] = None
 
     class Config:
         arbitrary_types_allowed = True
+        allow_population_by_field_name = True
 
     @classmethod
     def from_dict(cls, data: dict):
-        if 'created_at' in data and isinstance(data['created_at'], (int, float)):
-            data['created_at'] = datetime.fromtimestamp(data['created_at'])
-        if 'posted_at' in data and isinstance(data['posted_at'], (int, float)):
-            data['posted_at'] = datetime.fromtimestamp(data['posted_at'])
-        return cls(**data)
+        for field in ['created_at', 'posted_at']:
+            if field in data and isinstance(data[field], (int, float)):
+                data[field] = datetime.fromtimestamp(data[field])
+        return cls(**{k: v for k, v in data.items() if k in cls.__fields__})
