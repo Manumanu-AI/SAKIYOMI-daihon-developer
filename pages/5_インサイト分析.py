@@ -38,7 +38,7 @@ def add_insight_dialog():
             result = service.create_new_insight(new_insight)
             if result["status"] == "success":
                 st.success("新しい投稿データが追加されました")
-                st.rerun()
+                st.session_state.need_update = True
             else:
                 st.error("投稿データの追加に失敗しました")
 
@@ -55,7 +55,7 @@ def edit_insight_dialog(insights_df):
         reach_count = st.number_input("Reach Count", value=insight_to_edit['reach_count'], min_value=0, step=1)
         new_reach_count = st.number_input("New Reach Count", value=insight_to_edit['new_reach_count'], min_value=0, step=1)
         followers_reach_count = st.number_input("Followers Reach Count", value=insight_to_edit['followers_reach_count'], min_value=0, step=1)
-        posted_at = st.date_input("Posted At", value=insight_to_edit['posted_at'])
+        posted_at = st.date_input("Posted At", value=pd.to_datetime(insight_to_edit['posted_at']).date())
 
         submitted = st.form_submit_button("更新")
         if submitted:
@@ -77,7 +77,7 @@ def edit_insight_dialog(insights_df):
             result = service.update_insight(updated_insight)
             if result["status"] == "success":
                 st.success(f"Post {post_id} updated successfully")
-                st.rerun()
+                st.session_state.need_update = True
             else:
                 st.error(f"Failed to update post {post_id}")
 
@@ -149,7 +149,7 @@ def main():
                         result = service.delete_insight(user_id, post_id_to_delete)
                         if result["status"] == "success":
                             st.success(f"Post {post_id_to_delete} deleted successfully")
-                            st.rerun()
+                            st.session_state.need_update = True
                         else:
                             st.error(f"Failed to delete post {post_id_to_delete}")
 
@@ -162,6 +162,11 @@ def main():
         st.error(f"エラーが発生しました: {str(e)}")
         st.sidebar.write("エラーの詳細:")
         st.sidebar.code(traceback.format_exc())
+
+    # 更新が必要な場合、ページを再読み込み
+    if st.session_state.get('need_update', False):
+        st.session_state.need_update = False
+        st.rerun()
 
 if __name__ == "__main__":
     main()
