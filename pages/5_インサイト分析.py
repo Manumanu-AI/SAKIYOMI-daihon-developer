@@ -2,10 +2,11 @@
 
 import streamlit as st
 import pandas as pd
+import numpy as np
 from application.insight_service import InsightService
 from domain.insight import Insight
 import traceback
-from datetime import datetime
+from datetime import datetime, timedelta
 
 @st.experimental_dialog("投稿データを追加", width="large")
 def add_insight_dialog():
@@ -38,7 +39,6 @@ def add_insight_dialog():
             result = service.create_new_insight(new_insight)
             if result["status"] == "success":
                 st.success("新しい投稿データが追加されました")
-                st.session_state.need_update = True
                 st.rerun()
             else:
                 st.error("投稿データの追加に失敗しました")
@@ -81,7 +81,6 @@ def edit_insight_dialog():
             result = service.update_insight(updated_insight)
             if result["status"] == "success":
                 st.success(f"Post {post_id} updated successfully")
-                st.session_state.need_update = True
                 st.rerun()
             else:
                 st.error(f"Failed to update post {post_id}")
@@ -100,8 +99,13 @@ def main():
 
     service = InsightService()
 
+    st.sidebar.write("デバッグ情報:")
+    st.sidebar.write(f"ログイン状態: {st.session_state.get('logged_in', False)}")
+    st.sidebar.write(f"ユーザーID: {user_id}")
+
     try:
         insights = service.get_insights_by_user(user_id)
+        st.sidebar.write(f"取得したインサイト数: {len(insights)}")
         
         if insights:
             insights_df = pd.DataFrame([insight.dict() for insight in insights])
@@ -154,7 +158,61 @@ def main():
             with col8:
                 st.metric("フォロワー数", f"{summary_data['フォロワー数']:,}")
 
-            # 既存のデータフレーム表示コードはそのままです
+            st.sidebar.write("データフレーム作成成功")
+            st.sidebar.write(f"データフレームの行数: {len(insights_df)}")
+
+            if not insights_df.empty:
+                # カラムの順序を指定
+                column_order = ['post_id', 'post_url', 'plot', 'save_count', 'like_count', 'reach_count', 'new_reach_count', 'followers_reach_count', 'posted_at']
+                insights_df = insights_df[column_order]
+
+                st.dataframe(
+                    insights_df,
+                    column_config={
+                        "post_id": st.column_config.TextColumn("Post ID"),
+                        "post_url": st.column_config.TextColumn("Post URL"),
+                        "plot": st.column_config.TextColumn("Plot"),
+                        "save_count": st.column_config.NumberColumn("Save Count"),
+                        "like_count": st.column_config.NumberColumn("Like Count"),
+                        "reach_count": st.column_config.NumberColumn("Reach Count"),
+                        "new_reach_count": st.column_config.NumberColumn("New Reach Count"),
+                        "followers_reach_count": st.column_config.NumberColumn("Followers Reach Count"),
+                        "posted_at": st.column_config.DatetimeColumn("Posted At", format="YYYY-MM-DD HH:mm:ss"),
+                    },
+                    hide_index=True,
+                )
+
+                # 区切り線とスペーサーを追加
+                st.markdown("---")
+                st.markdown("<br>", unsafe_allow_html=True)
+
+                # データ操作セクション
+                st.header("データ操作")
+
+                col1, col2 = st.columns(2)
+                
+                with col1:
+                    st.subheader("データの追加・編集")
+                    if st.button("投稿データを追加", use_container_width=True):
+                        add_insight_dialog()
+                    if st.button("投稿データを編集", use_container_width=True):
+                        edit_insight_dialog()
+
+                with col2:
+                    st.subheader("データの削除")
+                    post_id_to_delete = st.selectbox("削除する投稿を選択", options=insights_df['post_id'].tolist())
+                    if st.button("削除", use_container_width=True):
+                        result = service.delete_insight(user_id, post_id_to_delete)
+                        if result["status"] == "success":
+                            st.success(f"Post {post_id_to_delete} deleted successfully")
+                            st.rerun()
+                        else:
+                            st.error(f"Failed to delete post {post_id_to_delete}")
+
+            else:
+                st.info("インサイトデータがありません。データフレームが空です。")
+        else:
+            st.info("インサイトデータがありません。get_insights_by_userが空のリストを返しました。")
 
     except Exception as e:
         st.error(f"エラーが発生しました: {str(e)}")
