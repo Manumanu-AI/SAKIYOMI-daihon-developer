@@ -39,6 +39,7 @@ def main():
 
             if not insights_df.empty:
                 insights_df['created_at'] = pd.to_datetime(insights_df['created_at'])
+                insights_df['posted_at'] = pd.to_datetime(insights_df['posted_at'])
 
                 edited_df = st.data_editor(
                     insights_df,
@@ -46,6 +47,8 @@ def main():
                         "post_id": st.column_config.TextColumn("Post ID", disabled=True),
                         "user_id": st.column_config.TextColumn("User ID", disabled=True),
                         "created_at": st.column_config.DatetimeColumn("Created At", format="YYYY-MM-DD HH:mm:ss", step=60),
+                        "posted_at": st.column_config.DatetimeColumn("Posted At", format="YYYY-MM-DD HH:mm:ss", step=60),
+                        "post_url": st.column_config.TextColumn("Post URL"),
                         "followers_reach_count": st.column_config.NumberColumn("Followers Reach Count", min_value=0, step=1),
                         "like_count": st.column_config.NumberColumn("Like Count", min_value=0, step=1),
                         "new_reach_count": st.column_config.NumberColumn("New Reach Count", min_value=0, step=1),
@@ -70,6 +73,7 @@ def main():
                     for index, row in edited_df.iterrows():
                         insight_dict = row.to_dict()
                         insight_dict['created_at'] = insight_dict['created_at'].to_pydatetime()
+                        insight_dict['posted_at'] = insight_dict['posted_at'].to_pydatetime()
                         insight = Insight.from_dict(insight_dict)
                         result = service.update_insight(insight)
                         if result["status"] == "success":
