@@ -20,8 +20,8 @@ class InsightRepository:
         for doc in insight_collection.stream():
             logging.info(f"Found document: {doc.id}")
             insight_data = doc.to_dict()
-            insight_data['post_id'] = doc.id  # ドキュメントIDをpost_idとして使用
-            insight_data['user_id'] = user_id  # user_idを追加
+            insight_data['post_id'] = doc.id
+            insight_data['user_id'] = user_id
             insights.append(Insight.from_dict(insight_data))
         
         logging.info(f"Total insights found: {len(insights)}")
@@ -30,7 +30,10 @@ class InsightRepository:
     def create_insight(self, insight: Insight) -> Dict[str, Any]:
         user_ref = self.db.collection('users').document(insight.user_id)
         insight_ref = user_ref.collection('insight_data').document(insight.post_id)
-        insight_ref.set(insight.dict())
+        insight_dict = insight.dict()
+        insight_dict['created_at'] = firestore.SERVER_TIMESTAMP
+        insight_dict['posted_at'] = firestore.SERVER_TIMESTAMP
+        insight_ref.set(insight_dict)
         logging.info(f"Created new insight for user {insight.user_id}, post_id: {insight.post_id}")
         return {"status": "success", "message": "New insight created successfully"}
 
