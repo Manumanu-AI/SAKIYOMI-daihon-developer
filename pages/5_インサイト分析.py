@@ -50,40 +50,41 @@ def edit_insight_dialog():
     insights = service.get_insights_by_user(user_id)
     insights_df = pd.DataFrame([insight.dict() for insight in insights])
     
-    post_id = st.selectbox("編集する投稿を選択", options=insights_df['post_id'].tolist())
-    insight_to_edit = insights_df[insights_df['post_id'] == post_id].iloc[0]
+    post_id = st.selectbox("編集する投稿を選択", options=insights_df['post_id'].tolist() if not insights_df.empty else [])
+    if not insights_df.empty:
+        insight_to_edit = insights_df[insights_df['post_id'] == post_id].iloc[0]
 
-    with st.form("edit_insight_form"):
-        post_url = st.text_input("Post URL", value=insight_to_edit['post_url'])
-        plot = st.text_area("Plot", value=insight_to_edit['plot'])
-        save_count = st.number_input("Save Count", value=insight_to_edit['save_count'], min_value=0, step=1)
-        like_count = st.number_input("Like Count", value=insight_to_edit['like_count'], min_value=0, step=1)
-        reach_count = st.number_input("Reach Count", value=insight_to_edit['reach_count'], min_value=0, step=1)
-        new_reach_count = st.number_input("New Reach Count", value=insight_to_edit['new_reach_count'], min_value=0, step=1)
-        followers_reach_count = st.number_input("Followers Reach Count", value=insight_to_edit['followers_reach_count'], min_value=0, step=1)
-        posted_at = st.date_input("Posted At", value=pd.to_datetime(insight_to_edit['posted_at']).date())
+        with st.form("edit_insight_form"):
+            post_url = st.text_input("Post URL", value=insight_to_edit['post_url'])
+            plot = st.text_area("Plot", value=insight_to_edit['plot'])
+            save_count = st.number_input("Save Count", value=insight_to_edit['save_count'], min_value=0, step=1)
+            like_count = st.number_input("Like Count", value=insight_to_edit['like_count'], min_value=0, step=1)
+            reach_count = st.number_input("Reach Count", value=insight_to_edit['reach_count'], min_value=0, step=1)
+            new_reach_count = st.number_input("New Reach Count", value=insight_to_edit['new_reach_count'], min_value=0, step=1)
+            followers_reach_count = st.number_input("Followers Reach Count", value=insight_to_edit['followers_reach_count'], min_value=0, step=1)
+            posted_at = st.date_input("Posted At", value=pd.to_datetime(insight_to_edit['posted_at']).date())
 
-        submitted = st.form_submit_button("更新")
-        if submitted:
-            updated_insight = Insight(
-                post_id=post_id,
-                user_id=user_id,
-                post_url=post_url,
-                plot=plot,
-                save_count=save_count,
-                like_count=like_count,
-                reach_count=reach_count,
-                new_reach_count=new_reach_count,
-                followers_reach_count=followers_reach_count,
-                posted_at=posted_at,
-                created_at=insight_to_edit['created_at']
-            )
-            result = service.update_insight(updated_insight)
-            if result["status"] == "success":
-                st.success(f"Post {post_id} updated successfully")
-                st.rerun()
-            else:
-                st.error(f"Failed to update post {post_id}")
+            submitted = st.form_submit_button("更新")
+            if submitted:
+                updated_insight = Insight(
+                    post_id=post_id,
+                    user_id=user_id,
+                    post_url=post_url,
+                    plot=plot,
+                    save_count=save_count,
+                    like_count=like_count,
+                    reach_count=reach_count,
+                    new_reach_count=new_reach_count,
+                    followers_reach_count=followers_reach_count,
+                    posted_at=posted_at,
+                    created_at=insight_to_edit['created_at']
+                )
+                result = service.update_insight(updated_insight)
+                if result["status"] == "success":
+                    st.success(f"Post {post_id} updated successfully")
+                    st.rerun()
+                else:
+                    st.error(f"Failed to update post {post_id}")
 
 def main():
     st.title("インサイトデータ表示")
@@ -174,37 +175,38 @@ def main():
                     hide_index=True,
                 )
 
-                # 区切り線とスペーサーを追加
-                st.markdown("---")
-                st.markdown("<br>", unsafe_allow_html=True)
-
-                # データ操作セクション
-                st.header("データ操作")
-
-                col1, col2 = st.columns(2)
-                
-                with col1:
-                    st.subheader("データの追加・編集")
-                    if st.button("投稿データを追加", use_container_width=True):
-                        add_insight_dialog()
-                    if st.button("投稿データを編集", use_container_width=True):
-                        edit_insight_dialog()
-
-                with col2:
-                    st.subheader("データの削除")
-                    post_id_to_delete = st.selectbox("削除する投稿を選択", options=insights_df['post_id'].tolist())
-                    if st.button("削除", use_container_width=True):
-                        result = service.delete_insight(user_id, post_id_to_delete)
-                        if result["status"] == "success":
-                            st.success(f"Post {post_id_to_delete} deleted successfully")
-                            st.rerun()
-                        else:
-                            st.error(f"Failed to delete post {post_id_to_delete}")
-
-            else:
-                st.info("インサイトデータがありません。データフレームが空です。")
         else:
             st.info("インサイトデータがありません。get_insights_by_userが空のリストを返しました。")
+
+        # 区切り線とスペーサーを追加
+        st.markdown("---")
+        st.markdown("<br>", unsafe_allow_html=True)
+
+        # データ操作セクション
+        st.header("データ操作")
+
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.subheader("データの追加・編集")
+            if st.button("投稿データを追加", use_container_width=True):
+                add_insight_dialog()
+            if st.button("投稿データを編集", use_container_width=True):
+                edit_insight_dialog()
+
+        with col2:
+            st.subheader("データの削除")
+            post_id_to_delete = st.selectbox("削除する投稿を選択", options=insights_df['post_id'].tolist() if not insights_df.empty else [])
+            if st.button("削除", use_container_width=True):
+                if insights_df.empty:
+                    st.error("削除するデータがありません")
+                else:
+                    result = service.delete_insight(user_id, post_id_to_delete)
+                    if result["status"] == "success":
+                        st.success(f"Post {post_id_to_delete} deleted successfully")
+                        st.rerun()
+                    else:
+                        st.error(f"Failed to delete post {post_id_to_delete}")
 
     except Exception as e:
         st.error(f"エラーが発生しました: {str(e)}")
