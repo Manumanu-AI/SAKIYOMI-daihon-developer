@@ -44,7 +44,12 @@ def add_insight_dialog():
                 st.error("投稿データの追加に失敗しました")
 
 @st.experimental_dialog("投稿データを編集", width="large")
-def edit_insight_dialog(insights_df):
+def edit_insight_dialog():
+    service = InsightService()
+    user_id = st.session_state.get('user_info', {}).get('localId')
+    insights = service.get_insights_by_user(user_id)
+    insights_df = pd.DataFrame([insight.dict() for insight in insights])
+    
     post_id = st.selectbox("編集する投稿を選択", options=insights_df['post_id'].tolist())
     insight_to_edit = insights_df[insights_df['post_id'] == post_id].iloc[0]
 
@@ -60,8 +65,6 @@ def edit_insight_dialog(insights_df):
 
         submitted = st.form_submit_button("更新")
         if submitted:
-            service = InsightService()
-            user_id = st.session_state.get('user_info', {}).get('localId')
             updated_insight = Insight(
                 post_id=post_id,
                 user_id=user_id,
@@ -141,7 +144,7 @@ def main():
 
                 with col2:
                     if st.button("投稿データを編集"):
-                        edit_insight_dialog(insights_df)
+                        edit_insight_dialog()
 
                 with col3:
                     post_id_to_delete = st.selectbox("削除する投稿を選択", options=insights_df['post_id'].tolist())
@@ -165,11 +168,6 @@ def main():
         st.error(f"エラーが発生しました: {str(e)}")
         st.sidebar.write("エラーの詳細:")
         st.sidebar.code(traceback.format_exc())
-
-    # 更新が必要な場合、ページを再読み込み
-    if st.session_state.get('need_update', False):
-        st.session_state.need_update = False
-        st.rerun()
 
 if __name__ == "__main__":
     main()
