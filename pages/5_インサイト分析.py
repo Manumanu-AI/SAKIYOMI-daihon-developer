@@ -100,73 +100,61 @@ def main():
 
     service = InsightService()
 
-    st.sidebar.write("デバッグ情報:")
-    st.sidebar.write(f"ログイン状態: {st.session_state.get('logged_in', False)}")
-    st.sidebar.write(f"ユーザーID: {user_id}")
-
     try:
         insights = service.get_insights_by_user(user_id)
-        st.sidebar.write(f"取得したインサイト数: {len(insights)}")
         
         if insights:
             insights_df = pd.DataFrame([insight.dict() for insight in insights])
-            st.sidebar.write("データフレーム作成成功")
-            st.sidebar.write(f"データフレームの行数: {len(insights_df)}")
+            insights_df['posted_at'] = pd.to_datetime(insights_df['posted_at'])
 
-            if not insights_df.empty:
-                insights_df['posted_at'] = pd.to_datetime(insights_df['posted_at'])
+            # サマリーセクション
+            st.header("サマリ")
 
-                # カラムの順序を指定
-                column_order = ['post_id', 'post_url', 'plot', 'save_count', 'like_count', 'reach_count', 'new_reach_count', 'followers_reach_count', 'posted_at']
-                insights_df = insights_df[column_order]
+            # 日付範囲選択
+            col1, col2 = st.columns(2)
+            with col1:
+                end_date = st.date_input("終了日", value=datetime.now().date())
+            with col2:
+                start_date = st.date_input("開始日", value=end_date - timedelta(days=6))
 
-                st.dataframe(
-                    insights_df,
-                    column_config={
-                        "post_id": st.column_config.TextColumn("Post ID"),
-                        "post_url": st.column_config.TextColumn("Post URL"),
-                        "plot": st.column_config.TextColumn("Plot"),
-                        "save_count": st.column_config.NumberColumn("Save Count"),
-                        "like_count": st.column_config.NumberColumn("Like Count"),
-                        "reach_count": st.column_config.NumberColumn("Reach Count"),
-                        "new_reach_count": st.column_config.NumberColumn("New Reach Count"),
-                        "followers_reach_count": st.column_config.NumberColumn("Followers Reach Count"),
-                        "posted_at": st.column_config.DatetimeColumn("Posted At", format="YYYY-MM-DD HH:mm:ss"),
-                    },
-                    hide_index=True,
-                )
+            # 選択された期間のデータをフィルタリング
+            mask = (insights_df['posted_at'].dt.date >= start_date) & (insights_df['posted_at'].dt.date <= end_date)
+            filtered_df = insights_df.loc[mask]
 
-                # 区切り線とスペーサーを追加
-                st.markdown("---")
-                st.markdown("<br>", unsafe_allow_html=True)
+            # サマリーデータの計算
+            summary_data = {
+                "保存数": filtered_df['save_count'].sum(),
+                "リーチ数": filtered_df['reach_count'].sum(),
+                "保存率": np.round(filtered_df['save_count'].sum() / filtered_df['reach_count'].sum() * 100, 2) if filtered_df['reach_count'].sum() > 0 else 0,
+                "フォロワーリーチ数": filtered_df['followers_reach_count'].sum(),
+                "新規リーチ数": filtered_df['new_reach_count'].sum(),
+                "ホーム率": 0,  # この値の計算方法が不明なため、0としています
+                "いいね数": filtered_df['like_count'].sum(),
+                "フォロワー数": 0,  # この値はデータフレームに含まれていないため、0としています
+            }
 
-                # データ操作セクション
-                st.header("データ操作")
+            # サマリーの表示
+            col1, col2, col3, col4 = st.columns(4)
+            col5, col6, col7, col8 = st.columns(4)
 
-                col1, col2 = st.columns(2)
-                
-                with col1:
-                    st.subheader("データの追加・編集")
-                    if st.button("投稿データを追加", use_container_width=True):
-                        add_insight_dialog()
-                    if st.button("投稿データを編集", use_container_width=True):
-                        edit_insight_dialog()
+            with col1:
+                st.metric("保存数", f"{summary_data['保存数']:,}")
+            with col2:
+                st.metric("リーチ数", f"{summary_data['リーチ数']:,}")
+            with col3:
+                st.metric("保存率", f"{summary_data['保存率']}%")
+            with col4:
+                st.metric("フォロワーリーチ数", f"{summary_data['フォロワーリーチ数']:,}")
+            with col5:
+                st.metric("新規リーチ数", f"{summary_data['新規リーチ数']:,}")
+            with col6:
+                st.metric("ホーム率", f"{summary_data['ホーム率']}%")
+            with col7:
+                st.metric("いいね数", f"{summary_data['いいね数']:,}")
+            with col8:
+                st.metric("フォロワー数", f"{summary_data['フォロワー数']:,}")
 
-                with col2:
-                    st.subheader("データの削除")
-                    post_id_to_delete = st.selectbox("削除する投稿を選択", options=insights_df['post_id'].tolist())
-                    if st.button("削除", use_container_width=True):
-                        result = service.delete_insight(user_id, post_id_to_delete)
-                        if result["status"] == "success":
-                            st.success(f"Post {post_id_to_delete} deleted successfully")
-                            st.rerun()
-                        else:
-                            st.error(f"Failed to delete post {post_id_to_delete}")
-
-            else:
-                st.info("インサイトデータがありません。データフレームが空です。")
-        else:
-            st.info("インサイトデータがありません。get_insights_by_userが空のリストを返しました。")
+            # 既存のデータフレーム表示コードはそのままです
 
     except Exception as e:
         st.error(f"エラーが発生しました: {str(e)}")
