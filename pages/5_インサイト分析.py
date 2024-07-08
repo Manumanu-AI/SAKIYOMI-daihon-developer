@@ -7,9 +7,9 @@ from domain.insight import Insight
 import traceback
 from datetime import datetime
 
-@st.experimental_dialog("投稿データを追加", width="large")
-def add_insight_dialog():
+def add_insight_form():
     with st.form("new_insight_form"):
+        st.subheader("投稿データを追加")
         post_url = st.text_input("Post URL")
         plot = st.text_area("Plot")
         save_count = st.number_input("Save Count", min_value=0, step=1)
@@ -38,26 +38,51 @@ def add_insight_dialog():
             result = service.create_new_insight(new_insight)
             if result["status"] == "success":
                 st.success("新しい投稿データが追加されました")
+                st.session_state.show_add_form = False
                 st.rerun()
             else:
                 st.error("投稿データの追加に失敗しました")
 
-@st.experimental_dialog("投稿データを削除")
-def delete_insight_dialog():
-    post_id_to_delete = st.text_input("削除する投稿ID")
-    if st.button("削除"):
-        if post_id_to_delete:
-            if st.warning(f"本当に投稿ID {post_id_to_delete} を削除しますか？"):
-                service = InsightService()
-                user_id = st.session_state.get('user_info', {}).get('localId')
-                result = service.delete_insight(user_id, post_id_to_delete)
-                if result["status"] == "success":
-                    st.success(f"Post {post_id_to_delete} deleted successfully")
-                    st.rerun()
-                else:
-                    st.error(f"Failed to delete post {post_id_to_delete}")
-        else:
-            st.error("削除する投稿IDを入力してください")
+def edit_insight_form(insights_df):
+    with st.form("edit_insight_form"):
+        st.subheader("投稿データを編集")
+        post_id = st.selectbox("編集する投稿を選択", options=insights_df['post_id'].tolist())
+        
+        selected_insight = insights_df[insights_df['post_id'] == post_id].iloc[0]
+        
+        post_url = st.text_input("Post URL", value=selected_insight['post_url'])
+        plot = st.text_area("Plot", value=selected_insight['plot'])
+        save_count = st.number_input("Save Count", value=selected_insight['save_count'], min_value=0, step=1)
+        like_count = st.number_input("Like Count", value=selected_insight['like_count'], min_value=0, step=1)
+        reach_count = st.number_input("Reach Count", value=selected_insight['reach_count'], min_value=0, step=1)
+        new_reach_count = st.number_input("New Reach Count", value=selected_insight['new_reach_count'], min_value=0, step=1)
+        followers_reach_count = st.number_input("Followers Reach Count", value=selected_insight['followers_reach_count'], min_value=0, step=1)
+        posted_at = st.date_input("Posted At", value=pd.to_datetime(selected_insight['posted_at']).date())
+
+        submitted = st.form_submit_button("更新")
+        if submitted:
+            service = InsightService()
+            user_id = st.session_state.get('user_info', {}).get('localId')
+            updated_insight = Insight(
+                post_id=post_id,
+                user_id=user_id,
+                post_url=post_url,
+                plot=plot,
+                save_count=save_count,
+                like_count=like_count,
+                reach_count=reach_count,
+                new_reach_count=new_reach_count,
+                followers_reach_count=followers_reach_count,
+                posted_at=posted_at,
+                created_at=selected_insight['created_at']
+            )
+            result = service.update_insight(updated_insight)
+            if result["status"] == "success":
+                st.success(f"Post {post_id} updated successfully")
+                st.session_state.show_edit_form = False
+                st.rerun()
+            else:
+                st.error(f"Failed to update post {post_id}")
 
 def main():
     st.title("インサイトデータ表示")
@@ -93,48 +118,49 @@ def main():
                 column_order = ['post_id', 'post_url', 'plot', 'save_count', 'like_count', 'reach_count', 'new_reach_count', 'followers_reach_count', 'posted_at']
                 insights_df = insights_df[column_order]
 
-                edited_df = st.data_editor(
+                st.dataframe(
                     insights_df,
                     column_config={
-                        "post_id": st.column_config.TextColumn("Post ID", disabled=True),
+                        "post_id": st.column_config.TextColumn("Post ID"),
                         "post_url": st.column_config.TextColumn("Post URL"),
                         "plot": st.column_config.TextColumn("Plot"),
-                        "save_count": st.column_config.NumberColumn("Save Count", min_value=0, step=1),
-                        "like_count": st.column_config.NumberColumn("Like Count", min_value=0, step=1),
-                        "reach_count": st.column_config.NumberColumn("Reach Count", min_value=0, step=1),
-                        "new_reach_count": st.column_config.NumberColumn("New Reach Count", min_value=0, step=1),
-                        "followers_reach_count": st.column_config.NumberColumn("Followers Reach Count", min_value=0, step=1),
-                        "posted_at": st.column_config.DatetimeColumn("Posted At", format="YYYY-MM-DD HH:mm:ss", step=60),
+                        "save_count": st.column_config.NumberColumn("Save Count"),
+                        "like_count": st.column_config.NumberColumn("Like Count"),
+                        "reach_count": st.column_config.NumberColumn("Reach Count"),
+                        "new_reach_count": st.column_config.NumberColumn("New Reach Count"),
+                        "followers_reach_count": st.column_config.NumberColumn("Followers Reach Count"),
+                        "posted_at": st.column_config.DatetimeColumn("Posted At", format="YYYY-MM-DD HH:mm:ss"),
                     },
                     hide_index=True,
-                    num_rows="dynamic",
                 )
 
                 col1, col2, col3 = st.columns([1, 1, 1])
                 
                 with col1:
                     if st.button("投稿データを追加"):
-                        st.info("投稿データを入力して、保存を押してください。")
-                        add_insight_dialog()
+                        st.session_state.show_add_form = True
 
                 with col2:
-                    if st.button("保存"):
-                        for index, row in edited_df.iterrows():
-                            insight_dict = row.to_dict()
-                            insight_dict['posted_at'] = insight_dict['posted_at'].to_pydatetime()
-                            insight_dict['user_id'] = user_id
-                            insight_dict['created_at'] = datetime.now()
-                            insight = Insight.from_dict(insight_dict)
-                            result = service.update_insight(insight)
-                            if result["status"] == "success":
-                                st.success(f"Post {insight.post_id} updated successfully")
-                            else:
-                                st.error(f"Failed to update post {insight.post_id}")
-                        st.rerun()
+                    if st.button("投稿データを編集"):
+                        st.session_state.show_edit_form = True
 
                 with col3:
-                    if st.button("投稿データを削除"):
-                        delete_insight_dialog()
+                    post_id_to_delete = st.text_input("削除する投稿ID")
+                    if st.button("削除"):
+                        if post_id_to_delete:
+                            result = service.delete_insight(user_id, post_id_to_delete)
+                            if result["status"] == "success":
+                                st.rerun()
+                            else:
+                                st.error(f"Failed to delete post {post_id_to_delete}")
+                        else:
+                            st.error("削除する投稿IDを入力してください")
+
+                if st.session_state.get('show_add_form', False):
+                    add_insight_form()
+
+                if st.session_state.get('show_edit_form', False):
+                    edit_insight_form(insights_df)
 
             else:
                 st.info("インサイトデータがありません。データフレームが空です。")
