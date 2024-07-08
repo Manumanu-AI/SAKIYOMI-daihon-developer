@@ -137,26 +137,29 @@ def main():
                 "フォロワー数": 0,  # この値はデータフレームに含まれていないため、0としています
             }
 
-            # サマリーの表示
-            col1, col2, col3, col4 = st.columns(4)
-            col5, col6, col7, col8 = st.columns(4)
+            # サマリーの表示（1行に配置し、枠線で囲む）
+            cols = st.columns(8)
+            metrics = [
+                ("保存数", f"{summary_data['保存数']:,}"),
+                ("リーチ数", f"{summary_data['リーチ数']:,}"),
+                ("保存率", f"{summary_data['保存率']}%"),
+                ("フォロワーリーチ数", f"{summary_data['フォロワーリーチ数']:,}"),
+                ("新規リーチ数", f"{summary_data['新規リーチ数']:,}"),
+                ("ホーム率", f"{summary_data['ホーム率']}%"),
+                ("いいね数", f"{summary_data['いいね数']:,}"),
+                ("フォロワー数", f"{summary_data['フォロワー数']:,}")
+            ]
 
-            with col1:
-                st.metric("保存数", f"{summary_data['保存数']:,}")
-            with col2:
-                st.metric("リーチ数", f"{summary_data['リーチ数']:,}")
-            with col3:
-                st.metric("保存率", f"{summary_data['保存率']}%")
-            with col4:
-                st.metric("フォロワーリーチ数", f"{summary_data['フォロワーリーチ数']:,}")
-            with col5:
-                st.metric("新規リーチ数", f"{summary_data['新規リーチ数']:,}")
-            with col6:
-                st.metric("ホーム率", f"{summary_data['ホーム率']}%")
-            with col7:
-                st.metric("いいね数", f"{summary_data['いいね数']:,}")
-            with col8:
-                st.metric("フォロワー数", f"{summary_data['フォロワー数']:,}")
+            for col, (label, value) in zip(cols, metrics):
+                col.markdown(
+                    f"""
+                    <div style="border: 1px solid #ccc; border-radius: 5px; padding: 10px; text-align: center;">
+                        <p style="font-weight: bold; margin-bottom: 5px;">{label}</p>
+                        <p style="font-size: 1.2em; margin: 0;">{value}</p>
+                    </div>
+                    """,
+                    unsafe_allow_html=True
+                )
 
             st.sidebar.write("データフレーム作成成功")
             st.sidebar.write(f"データフレームの行数: {len(insights_df)}")
