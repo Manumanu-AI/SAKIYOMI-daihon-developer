@@ -39,6 +39,7 @@ def add_insight_dialog():
             if result["status"] == "success":
                 st.success("新しい投稿データが追加されました")
                 st.session_state.need_update = True
+                st.rerun()
             else:
                 st.error("投稿データの追加に失敗しました")
 
@@ -78,6 +79,7 @@ def edit_insight_dialog(insights_df):
             if result["status"] == "success":
                 st.success(f"Post {post_id} updated successfully")
                 st.session_state.need_update = True
+                st.rerun()
             else:
                 st.error(f"Failed to update post {post_id}")
 
@@ -150,6 +152,7 @@ def main():
                         if result["status"] == "success":
                             st.success(f"Post {post_id_to_delete} deleted successfully")
                             st.session_state.need_update = True
+                            st.rerun()
                         else:
                             st.error(f"Failed to delete post {post_id_to_delete}")
 
