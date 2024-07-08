@@ -143,17 +143,17 @@ def main():
                 # データ操作セクション
                 st.header("データ操作")
 
-                col1, col2, col3 = st.columns([1, 1, 1])
+                col1, col2 = st.columns(2)
                 
                 with col1:
+                    st.subheader("データの追加・編集")
                     if st.button("投稿データを追加", use_container_width=True):
                         add_insight_dialog()
-
-                with col2:
                     if st.button("投稿データを編集", use_container_width=True):
                         edit_insight_dialog()
 
-                with col3:
+                with col2:
+                    st.subheader("データの削除")
                     post_id_to_delete = st.selectbox("削除する投稿を選択", options=insights_df['post_id'].tolist())
                     if st.button("削除", use_container_width=True):
                         result = service.delete_insight(user_id, post_id_to_delete)
