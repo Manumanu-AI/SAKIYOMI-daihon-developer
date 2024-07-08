@@ -219,24 +219,33 @@ def main():
             else:
                 st.info("削除するデータがありません。先にデータを追加してください。")
 
+        # 区切り線を追加
         st.markdown("---")
 
         # AI分析セクション
         st.markdown("### AI分析")
+        st.write("振り返りと改善提案")
 
-        # 大きめのテキストボックス
-        analysis_query = st.text_area("分析したい内容を入力してください", height=150)
+        # 分析開始ボタン
+        if st.button("分析を開始する", key="start_analysis_button"):
+            with st.spinner('AI分析を実行中...'):
+                # ここでインサイトデータをAI分析用に整形
+                user_message = f"CSVデータ:\n{dataframe_to_string(insights_df)}\n\nユーザーの入力: インサイトデータの分析をお願いします。"
+                
+                # AI分析の実行
+                system_prompt = "あなたはインサイトデータ分析の専門家です。提供されたデータを分析し、詳細な洞察と改善提案を提供してください。"
+                ai_analysis = get_ai_analysis(st.secrets["ANTHROPIC_API_KEY"], system_prompt, user_message)
+                
+                # 分析結果をセッション状態に保存
+                st.session_state.analysis_result = ai_analysis
 
-        # 「分析を開始する」ボタンを左下に配置
-        col1, col2, col3 = st.columns([1, 1, 1])
-        with col1:
-            if st.button("分析を開始する", use_container_width=True):
-                if analysis_query:
-                    # ここにAI分析のロジックを実装
-                    st.info("AI分析を開始しました。結果が表示されるまでお待ちください。")
-                    # 実際のAI分析結果を表示する処理をここに追加
-                else:
-                    st.warning("分析内容を入力してください。")
+        # 分析結果の表示
+        if 'analysis_result' in st.session_state:
+            analysis_text = st.session_state.analysis_result
+        else:
+            analysis_text = "分析結果がここに表示されます。"
+
+        st.text_area("AI分析結果", analysis_text, height=400, key="analysis_result")
 
     except Exception as e:
         st.error(f"エラーが発生しました: {str(e)}")
