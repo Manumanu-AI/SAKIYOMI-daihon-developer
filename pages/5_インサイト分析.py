@@ -11,14 +11,14 @@ from datetime import datetime, timedelta
 @st.experimental_dialog("投稿データを追加", width="large")
 def add_insight_dialog():
     with st.form("new_insight_form"):
-        post_url = st.text_input("Post URL")
-        plot = st.text_area("Plot")
-        save_count = st.number_input("Save Count", min_value=0, step=1)
-        like_count = st.number_input("Like Count", min_value=0, step=1)
-        reach_count = st.number_input("Reach Count", min_value=0, step=1)
-        new_reach_count = st.number_input("New Reach Count", min_value=0, step=1)
-        followers_reach_count = st.number_input("Followers Reach Count", min_value=0, step=1)
-        posted_at = st.date_input("Posted At")
+        post_url = st.text_input("投稿URL")
+        plot = st.text_area("プロット")
+        save_count = st.number_input("保存数", min_value=0, step=1)
+        like_count = st.number_input("いいね数", min_value=0, step=1)
+        reach_count = st.number_input("リーチ数", min_value=0, step=1)
+        new_reach_count = st.number_input("新規リーチ数", min_value=0, step=1)
+        followers_reach_count = st.number_input("フォロワーリーチ数", min_value=0, step=1)
+        posted_at = st.date_input("投稿日")
 
         submitted = st.form_submit_button("保存")
         if submitted:
@@ -54,14 +54,14 @@ def edit_insight_dialog():
     insight_to_edit = insights_df[insights_df['post_id'] == post_id].iloc[0]
 
     with st.form("edit_insight_form"):
-        post_url = st.text_input("Post URL", value=insight_to_edit['post_url'])
-        plot = st.text_area("Plot", value=insight_to_edit['plot'])
-        save_count = st.number_input("Save Count", value=insight_to_edit['save_count'], min_value=0, step=1)
-        like_count = st.number_input("Like Count", value=insight_to_edit['like_count'], min_value=0, step=1)
-        reach_count = st.number_input("Reach Count", value=insight_to_edit['reach_count'], min_value=0, step=1)
-        new_reach_count = st.number_input("New Reach Count", value=insight_to_edit['new_reach_count'], min_value=0, step=1)
-        followers_reach_count = st.number_input("Followers Reach Count", value=insight_to_edit['followers_reach_count'], min_value=0, step=1)
-        posted_at = st.date_input("Posted At", value=pd.to_datetime(insight_to_edit['posted_at']).date())
+        post_url = st.text_input("投稿URL", value=insight_to_edit['post_url'])
+        plot = st.text_area("プロット", value=insight_to_edit['plot'])
+        save_count = st.number_input("保存数", value=insight_to_edit['save_count'], min_value=0, step=1)
+        like_count = st.number_input("いいね数", value=insight_to_edit['like_count'], min_value=0, step=1)
+        reach_count = st.number_input("リーチ数", value=insight_to_edit['reach_count'], min_value=0, step=1)
+        new_reach_count = st.number_input("新規リーチ数", value=insight_to_edit['new_reach_count'], min_value=0, step=1)
+        followers_reach_count = st.number_input("フォロワーリーチ数", value=insight_to_edit['followers_reach_count'], min_value=0, step=1)
+        posted_at = st.date_input("投稿日", value=pd.to_datetime(insight_to_edit['posted_at']).date())
 
         submitted = st.form_submit_button("更新")
         if submitted:
@@ -80,10 +80,10 @@ def edit_insight_dialog():
             )
             result = service.update_insight(updated_insight)
             if result["status"] == "success":
-                st.success(f"Post {post_id} updated successfully")
+                st.success(f"投稿 {post_id} が正常に更新されました")
                 st.rerun()
             else:
-                st.error(f"Failed to update post {post_id}")
+                st.error(f"投稿 {post_id} の更新に失敗しました")
 
 def main():
     st.markdown("## インサイト分析")
@@ -115,7 +115,7 @@ def main():
             # サマリーセクション
             st.markdown("### サマリ")
 
-            # 日付範囲選択（左右を逆に）
+            # 日付範囲選択
             col1, col2 = st.columns(2)
             with col1:
                 start_date = st.date_input("開始日", value=datetime.now().date() - timedelta(days=6))
@@ -123,37 +123,46 @@ def main():
                 end_date = st.date_input("終了日", value=datetime.now().date())
 
             # 選択された期間のデータをフィルタリング
-            mask = (insights_df['posted_at'].dt.date >= start_date) & (insights_df['posted_at'].dt.date <= end_date)
-            filtered_df = insights_df.loc[mask]
+            current_mask = (insights_df['posted_at'].dt.date >= start_date) & (insights_df['posted_at'].dt.date <= end_date)
+            current_df = insights_df.loc[current_mask]
+
+            # 過去比較期間の計算
+            date_diff = (end_date - start_date).days
+            past_end_date = start_date - timedelta(days=1)
+            past_start_date = past_end_date - timedelta(days=date_diff)
+
+            # 過去比較期間のデータをフィルタリング
+            past_mask = (insights_df['posted_at'].dt.date >= past_start_date) & (insights_df['posted_at'].dt.date <= past_end_date)
+            past_df = insights_df.loc[past_mask]
 
             # サマリーデータの計算
-            summary_data = {
-                "保存数": filtered_df['save_count'].sum(),
-                "リーチ数": filtered_df['reach_count'].sum(),
-                "保存率": np.round(filtered_df['save_count'].sum() / filtered_df['reach_count'].sum() * 100, 2) if filtered_df['reach_count'].sum() > 0 else 0,
-                "フォロワーリーチ数": filtered_df['followers_reach_count'].sum(),
-                "新規リーチ数": filtered_df['new_reach_count'].sum(),
-                "ホーム率": 0,  # この値の計算方法が不明なため、0としています
-                "いいね数": filtered_df['like_count'].sum(),
-                "フォロワー数": 0,  # この値はデータフレームに含まれていないため、0としています
-            }
+            metrics = ['save_count', 'reach_count', 'followers_reach_count', 'new_reach_count', 'like_count']
+            current_metrics = {metric: current_df[metric].sum() for metric in metrics}
+            past_metrics = {metric: past_df[metric].sum() for metric in metrics}
 
-            # サマリーの表示（1行8列に、枠線付き）
-            cols = st.columns(8)
-            metrics = [
-                ("保存数", f"{summary_data['保存数']:,}"),
-                ("リーチ数", f"{summary_data['リーチ数']:,}"),
-                ("保存率", f"{summary_data['保存率']}%"),
-                ("フォロワーリーチ数", f"{summary_data['フォロワーリーチ数']:,}"),
-                ("新規リーチ数", f"{summary_data['新規リーチ数']:,}"),
-                ("ホーム率", f"{summary_data['ホーム率']}%"),
-                ("いいね数", f"{summary_data['いいね数']:,}"),
-                ("フォロワー数", f"{summary_data['フォロワー数']:,}")
+            # 保存率の計算
+            current_metrics['save_rate'] = (current_metrics['save_count'] / current_metrics['reach_count'] * 100) if current_metrics['reach_count'] > 0 else 0
+            past_metrics['save_rate'] = (past_metrics['save_count'] / past_metrics['reach_count'] * 100) if past_metrics['reach_count'] > 0 else 0
+
+            # 差分の計算
+            metric_changes = {metric: current_metrics[metric] - past_metrics[metric] for metric in metrics + ['save_rate']}
+
+            # サマリーの表示（1行7列に、枠線付き）
+            cols = st.columns(7)
+            display_metrics = [
+                ("保存数", current_metrics['save_count'], metric_changes['save_count']),
+                ("リーチ数", current_metrics['reach_count'], metric_changes['reach_count']),
+                ("保存率", f"{current_metrics['save_rate']:.2f}%", f"{metric_changes['save_rate']:.2f}"),
+                ("フォロワーリーチ数", current_metrics['followers_reach_count'], metric_changes['followers_reach_count']),
+                ("新規リーチ数", current_metrics['new_reach_count'], metric_changes['new_reach_count']),
+                ("ホーム率", "0%", "0"),  # この値の計算方法が不明なため、0としています
+                ("いいね数", current_metrics['like_count'], metric_changes['like_count'])
             ]
-            for col, (label, value) in zip(cols, metrics):
+            
+            for col, (label, value, change) in zip(cols, display_metrics):
                 with col:
                     with st.container(border=True):
-                        st.metric(label=label, value=value)
+                        st.metric(label=label, value=value, delta=change)
 
             st.sidebar.write("データフレーム作成成功")
             st.sidebar.write(f"データフレームの行数: {len(insights_df)}")
