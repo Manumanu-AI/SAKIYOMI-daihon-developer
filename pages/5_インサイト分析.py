@@ -85,6 +85,22 @@ def edit_insight_dialog():
             else:
                 st.error(f"Failed to update post {post_id}")
 
+def styled_metric(label, value):
+    st.markdown(
+        f"""
+        <div style="
+            border: 1px solid #d0d0d0;
+            border-radius: 5px;
+            padding: 10px;
+            text-align: center;
+        ">
+            <p style="font-size: 14px; margin-bottom: 5px;">{label}</p>
+            <p style="font-size: 20px; font-weight: bold; margin: 0;">{value}</p>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
 def main():
     st.markdown("## インサイト分析")
     st.markdown("---")  # ページタイトルの下に区切り線を追加
@@ -115,12 +131,12 @@ def main():
             # サマリーセクション
             st.markdown("### サマリ")
 
-            # 日付範囲選択
+            # 日付範囲選択（左右を逆に）
             col1, col2 = st.columns(2)
             with col1:
-                end_date = st.date_input("終了日", value=datetime.now().date())
+                start_date = st.date_input("開始日", value=datetime.now().date() - timedelta(days=6))
             with col2:
-                start_date = st.date_input("開始日", value=end_date - timedelta(days=6))
+                end_date = st.date_input("終了日", value=datetime.now().date())
 
             # 選択された期間のデータをフィルタリング
             mask = (insights_df['posted_at'].dt.date >= start_date) & (insights_df['posted_at'].dt.date <= end_date)
@@ -151,7 +167,8 @@ def main():
                 ("フォロワー数", f"{summary_data['フォロワー数']:,}")
             ]
             for col, (label, value) in zip(cols, metrics):
-                col.metric(label, value)
+                with col:
+                    styled_metric(label, value)
 
             st.sidebar.write("データフレーム作成成功")
             st.sidebar.write(f"データフレームの行数: {len(insights_df)}")
