@@ -49,3 +49,11 @@ class InsightRepository:
         user_ids = [user.id for user in users]
         logging.info(f"Retrieved {len(user_ids)} user IDs")
         return user_ids
+
+
+    def delete_insight(self, user_id: str, post_id: str) -> Dict[str, Any]:
+        user_ref = self.db.collection('users').document(user_id)
+        insight_ref = user_ref.collection('insight_data').document(post_id)
+        insight_ref.delete()
+        logging.info(f"Deleted insight for user {user_id}, post_id: {post_id}")
+        return {"status": "success", "message": "Insight deleted successfully"}
