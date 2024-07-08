@@ -85,22 +85,6 @@ def edit_insight_dialog():
             else:
                 st.error(f"Failed to update post {post_id}")
 
-def styled_metric(label, value):
-    st.markdown(
-        f"""
-        <div style="
-            border: 1px solid #d0d0d0;
-            border-radius: 5px;
-            padding: 10px;
-            text-align: center;
-        ">
-            <p style="font-size: 14px; margin-bottom: 5px;">{label}</p>
-            <p style="font-size: 20px; font-weight: bold; margin: 0;">{value}</p>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
-
 def main():
     st.markdown("## インサイト分析")
     st.markdown("---")  # ページタイトルの下に区切り線を追加
@@ -154,7 +138,7 @@ def main():
                 "フォロワー数": 0,  # この値はデータフレームに含まれていないため、0としています
             }
 
-            # サマリーの表示（1行8列に）
+            # サマリーの表示（1行8列に、枠線付き）
             cols = st.columns(8)
             metrics = [
                 ("保存数", f"{summary_data['保存数']:,}"),
@@ -168,7 +152,8 @@ def main():
             ]
             for col, (label, value) in zip(cols, metrics):
                 with col:
-                    styled_metric(label, value)
+                    with st.container(border=True):
+                        st.metric(label=label, value=value)
 
             st.sidebar.write("データフレーム作成成功")
             st.sidebar.write(f"データフレームの行数: {len(insights_df)}")
