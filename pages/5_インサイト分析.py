@@ -7,6 +7,8 @@ from application.insight_service import InsightService
 from domain.insight import Insight
 import traceback
 from datetime import datetime, timedelta
+import anthropic
+import io  # 追加
 
 @st.experimental_dialog("投稿データを追加", width="large")
 def add_insight_dialog():
@@ -84,6 +86,26 @@ def edit_insight_dialog():
                 st.rerun()
             else:
                 st.error(f"Failed to update post {post_id}")
+
+def get_ai_analysis(api_key, prompt, user_message):
+    client = anthropic.Anthropic(api_key=api_key)
+    message = client.messages.create(
+        model="claude-3-opus-20240229",
+        max_tokens=3000,
+        temperature=0.7,
+        system=prompt,
+        messages=[
+            {"role": "user", "content": user_message}
+        ]
+    )
+    generated_text = message.content[0].text.replace('\\n', '\n')
+    return generated_text
+
+def dataframe_to_string(df):
+    # DataFrameをCSV形式の文字列に変換
+    buffer = io.StringIO()
+    df.to_csv(buffer, index=False)
+    return buffer.getvalue()
 
 def main():
     st.markdown("## インサイト分析")
