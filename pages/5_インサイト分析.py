@@ -54,14 +54,14 @@ def edit_insight_dialog():
     insight_to_edit = insights_df[insights_df['post_id'] == post_id].iloc[0]
 
     with st.form("edit_insight_form"):
-        post_url = st.text_input("投稿URL", value=insight_to_edit['post_url'])
-        plot = st.text_area("プロット", value=insight_to_edit['plot'])
-        save_count = st.number_input("保存数", value=insight_to_edit['save_count'], min_value=0, step=1)
-        like_count = st.number_input("いいね数", value=insight_to_edit['like_count'], min_value=0, step=1)
-        reach_count = st.number_input("リーチ数", value=insight_to_edit['reach_count'], min_value=0, step=1)
-        new_reach_count = st.number_input("新規リーチ数", value=insight_to_edit['new_reach_count'], min_value=0, step=1)
-        followers_reach_count = st.number_input("フォロワーリーチ数", value=insight_to_edit['followers_reach_count'], min_value=0, step=1)
-        posted_at = st.date_input("投稿日", value=pd.to_datetime(insight_to_edit['posted_at']).date())
+        post_url = st.text_input("Post URL", value=insight_to_edit['post_url'])
+        plot = st.text_area("Plot", value=insight_to_edit['plot'])
+        save_count = st.number_input("Save Count", value=insight_to_edit['save_count'], min_value=0, step=1)
+        like_count = st.number_input("Like Count", value=insight_to_edit['like_count'], min_value=0, step=1)
+        reach_count = st.number_input("Reach Count", value=insight_to_edit['reach_count'], min_value=0, step=1)
+        new_reach_count = st.number_input("New Reach Count", value=insight_to_edit['new_reach_count'], min_value=0, step=1)
+        followers_reach_count = st.number_input("Followers Reach Count", value=insight_to_edit['followers_reach_count'], min_value=0, step=1)
+        posted_at = st.date_input("Posted At", value=pd.to_datetime(insight_to_edit['posted_at']).date())
 
         submitted = st.form_submit_button("更新")
         if submitted:
@@ -80,10 +80,10 @@ def edit_insight_dialog():
             )
             result = service.update_insight(updated_insight)
             if result["status"] == "success":
-                st.success(f"投稿 {post_id} が正常に更新されました")
+                st.success(f"Post {post_id} updated successfully")
                 st.rerun()
             else:
-                st.error(f"投稿 {post_id} の更新に失敗しました")
+                st.error(f"Failed to update post {post_id}")
 
 def main():
     st.markdown("## インサイト分析")
@@ -126,43 +126,41 @@ def main():
             current_mask = (insights_df['posted_at'].dt.date >= start_date) & (insights_df['posted_at'].dt.date <= end_date)
             current_df = insights_df.loc[current_mask]
 
-            # 過去比較期間の計算
-            date_diff = (end_date - start_date).days
+            # 過去期間の計算
+            period_length = (end_date - start_date).days + 1
             past_end_date = start_date - timedelta(days=1)
-            past_start_date = past_end_date - timedelta(days=date_diff)
-
-            # 過去比較期間のデータをフィルタリング
+            past_start_date = past_end_date - timedelta(days=period_length-1)
             past_mask = (insights_df['posted_at'].dt.date >= past_start_date) & (insights_df['posted_at'].dt.date <= past_end_date)
             past_df = insights_df.loc[past_mask]
 
             # サマリーデータの計算
-            metrics = ['save_count', 'reach_count', 'followers_reach_count', 'new_reach_count', 'like_count']
-            current_metrics = {metric: current_df[metric].sum() for metric in metrics}
-            past_metrics = {metric: past_df[metric].sum() for metric in metrics}
-
-            # 保存率の計算
-            current_metrics['save_rate'] = (current_metrics['save_count'] / current_metrics['reach_count'] * 100) if current_metrics['reach_count'] > 0 else 0
-            past_metrics['save_rate'] = (past_metrics['save_count'] / past_metrics['reach_count'] * 100) if past_metrics['reach_count'] > 0 else 0
-
-            # 差分の計算
-            metric_changes = {metric: current_metrics[metric] - past_metrics[metric] for metric in metrics + ['save_rate']}
+            metrics = ["保存数", "リーチ数", "保存率", "フォロワーリーチ数", "新規リーチ数", "ホーム率", "いいね数"]
+            current_metrics = {
+                "保存数": current_df['save_count'].sum(),
+                "リーチ数": current_df['reach_count'].sum(),
+                "保存率": np.round(current_df['save_count'].sum() / current_df['reach_count'].sum() * 100, 2) if current_df['reach_count'].sum() > 0 else 0,
+                "フォロワーリーチ数": current_df['followers_reach_count'].sum(),
+                "新規リーチ数": current_df['new_reach_count'].sum(),
+                "ホーム率": 0,  # この値の計算方法が不明なため、0としています
+                "いいね数": current_df['like_count'].sum(),
+            }
+            past_metrics = {
+                "保存数": past_df['save_count'].sum(),
+                "リーチ数": past_df['reach_count'].sum(),
+                "保存率": np.round(past_df['save_count'].sum() / past_df['reach_count'].sum() * 100, 2) if past_df['reach_count'].sum() > 0 else 0,
+                "フォロワーリーチ数": past_df['followers_reach_count'].sum(),
+                "新規リーチ数": past_df['new_reach_count'].sum(),
+                "ホーム率": 0,
+                "いいね数": past_df['like_count'].sum(),
+            }
 
             # サマリーの表示（1行7列に、枠線付き）
             cols = st.columns(7)
-            display_metrics = [
-                ("保存数", current_metrics['save_count'], metric_changes['save_count']),
-                ("リーチ数", current_metrics['reach_count'], metric_changes['reach_count']),
-                ("保存率", f"{current_metrics['save_rate']:.2f}%", f"{metric_changes['save_rate']:.2f}"),
-                ("フォロワーリーチ数", current_metrics['followers_reach_count'], metric_changes['followers_reach_count']),
-                ("新規リーチ数", current_metrics['new_reach_count'], metric_changes['new_reach_count']),
-                ("ホーム率", "0%", "0"),  # この値の計算方法が不明なため、0としています
-                ("いいね数", current_metrics['like_count'], metric_changes['like_count'])
-            ]
-            
-            for col, (label, value, change) in zip(cols, display_metrics):
+            for col, metric in zip(cols, metrics):
                 with col:
                     with st.container(border=True):
-                        st.metric(label=label, value=value, delta=change)
+                        delta = current_metrics[metric] - past_metrics[metric]
+                        st.metric(label=metric, value=int(current_metrics[metric]), delta=int(delta))
 
             st.sidebar.write("データフレーム作成成功")
             st.sidebar.write(f"データフレームの行数: {len(insights_df)}")
