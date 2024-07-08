@@ -95,21 +95,30 @@ def delete_insight_dialog():
     
     post_id = st.selectbox("削除する投稿を選択", options=insights_df['post_id'].tolist())
     
+    if 'delete_confirmed' not in st.session_state:
+        st.session_state.delete_confirmed = False
+
     if st.button("削除"):
         st.warning("本当に削除しますか？操作は取り消せません。")
         col1, col2 = st.columns(2)
         with col1:
             if st.button("キャンセル"):
+                st.session_state.delete_confirmed = False
                 st.rerun()
         with col2:
             if st.button("はい"):
-                result = service.delete_insight(user_id, post_id)
-                if result["status"] == "success":
-                    st.success(f"Post {post_id} deleted successfully")
-                    st.session_state.need_update = True
-                    st.rerun()
-                else:
-                    st.error(f"Failed to delete post {post_id}")
+                st.session_state.delete_confirmed = True
+
+    if st.session_state.delete_confirmed:
+        result = service.delete_insight(user_id, post_id)
+        if result["status"] == "success":
+            st.success(f"Post {post_id} deleted successfully")
+            st.session_state.need_update = True
+            st.session_state.delete_confirmed = False
+            st.rerun()
+        else:
+            st.error(f"Failed to delete post {post_id}")
+            st.session_state.delete_confirmed = False
 
 def main():
     st.title("インサイトデータ表示")
@@ -184,6 +193,10 @@ def main():
         st.error(f"エラーが発生しました: {str(e)}")
         st.sidebar.write("エラーの詳細:")
         st.sidebar.code(traceback.format_exc())
+
+    if st.session_state.get('need_update', False):
+        st.session_state.need_update = False
+        st.rerun()
 
 if __name__ == "__main__":
     main()
