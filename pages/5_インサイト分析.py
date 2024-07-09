@@ -248,26 +248,29 @@ def main():
         st.markdown("### AI分析")
         st.write("振り返りと改善提案")
 
+        # カスタムプロンプトの取得
+        custom_prompt = prompt_service.read_prompt(user_id, type='insight_analysis')
+        if custom_prompt['status'] == 'success':
+            system_prompt = custom_prompt['data']['text']
+        else:
+            system_prompt = "あなたはインサイトデータ分析の専門家です。提供されたデータを分析し、詳細な洞察と改善提案を提供してください。"
+
         # 分析開始ボタン
         if st.button("分析を開始する", key="start_analysis_button"):
             with st.spinner('AI分析を実行中...'):
-                # ここでインサイトデータをAI分析用に整形
                 user_message = f"CSVデータ:\n{dataframe_to_string(insights_df)}\n\nユーザーの入力: インサイトデータの分析をお願いします。"
                 
-                # AI分析の実行
-                system_prompt = "あなたはインサイトデータ分析の専門家です。提供されたデータを分析し、詳細な洞察と改善提案を提供してください。"
+                # AI分析の実行（カスタムプロンプトを使用）
                 ai_analysis = get_ai_analysis(st.secrets["ANTHROPIC_API_KEY"], system_prompt, user_message)
                 
                 # 分析結果をセッション状態に保存
                 st.session_state.analysis_result = ai_analysis
 
         # 分析結果の表示
-        if 'analysis_result' in st.session_state:
-            analysis_text = st.session_state.analysis_result
-        else:
-            analysis_text = "分析結果がここに表示されます。"
+        if 'analysis_result' not in st.session_state:
+            st.session_state.analysis_result = "分析結果がここに表示されます。"
 
-        st.text_area("AI分析結果", analysis_text, height=400, key="analysis_result")
+        st.text_area("AI分析結果", value=st.session_state.analysis_result, height=400, key="analysis_result")
 
     except Exception as e:
         st.error(f"エラーが発生しました: {str(e)}")
