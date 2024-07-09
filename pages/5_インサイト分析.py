@@ -4,11 +4,12 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 from application.insight_service import InsightService
+from application.prompt_service import PromptService  # この行を追加
 from domain.insight import Insight
 import traceback
 from datetime import datetime, timedelta
 import anthropic
-import io  # 追加
+import io
 
 @st.experimental_dialog("投稿データを追加", width="large")
 def add_insight_dialog():
