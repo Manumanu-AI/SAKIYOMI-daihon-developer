@@ -257,32 +257,6 @@ def store_pdf_data_in_pinecone(index, chunk_embeddings, chunks, pdf_file_name, n
         print(f"Saved: {vector['id']}")
 
 
-def generate_claude3_response(user_input, system_prompt, results_ns1, results_ns2, results_ns3, results_ns4, results_ns5):
-    client = anthropic.Client(
-        api_key=st.secrets["ANTHROPIC_API_KEY"]
-    )
-    system_message = system_prompt.format(
-        user_input=user_input,
-        results_ns1=results_ns1,
-        results_ns2=results_ns2,
-        results_ns3=results_ns3,
-        results_ns4=results_ns4,
-        results_ns5=results_ns5,
-    )
-    message = client.messages.create(
-        model="claude-3-opus-20240229",
-        max_tokens=2048,
-        temperature=0.85,
-        system=system_message,
-        messages=[
-            {"role": "user", "content": user_input},
-        ]
-    )
-    generated_text = message.content[0].text.replace('\\n', '\n')
-    return generated_text
-
-
-
 def generate_response_with_llm_for_multiple_namespaces(index, user_input, namespaces, selected_llm, system_prompt, project_name):
     results = {}  # 各名前空間の検索結果を格納する辞書
 
@@ -323,28 +297,22 @@ def generate_response_with_llm_for_multiple_namespaces(index, user_input, namesp
 
     # LLMの選択
     if selected_llm == "GPT-4o":
-        llm = ChatOpenAI(model='gpt-4o', temperature=0.7)
-        llm_chain = LLMChain(prompt=prompt_template, llm=llm)
-        with tracing_v2_enabled(project_name=project_name):
-            response = llm_chain.invoke({
-                "user_input": user_input,
-                "results_ns1": results.get('ns1', '情報なし'),
-                "results_ns2": results.get('ns2', '情報なし'),
-                "results_ns3": results.get('ns3', '情報なし'),
-                "results_ns4": results.get('ns4', '情報なし'),
-                "results_ns5": results.get('ns5', '情報なし'),
-            })
+        llm = ChatOpenAI(model='gpt-4o', temperature=1.0)
     else:
-        response_text = generate_claude3_response(
-            user_input,
-            system_prompt,
-            results.get('ns1', '情報なし'),
-            results.get('ns2', '情報なし'),
-            results.get('ns3', '情報なし'),
-            results.get('ns4', '情報なし'),
-            results.get('ns5', '情報なし')
-        )
-        response = {'text': response_text}  # responseを辞書に変換
+        llm = ChatAnthropic(model_name='claude-3-opus-20240229', temperature=1.0)
+
+    llm_chain = LLMChain(prompt=prompt_template, llm=llm)
+
+    with tracing_v2_enabled(project_name=project_name):
+        response = llm_chain.invoke({
+            "user_input": user_input,
+            "results_ns1": results.get('ns1', '情報なし'),
+            "results_ns2": results.get('ns2', '情報なし'),
+            "results_ns3": results.get('ns3', '情報なし'),
+            "results_ns4": results.get('ns4', '情報なし'),
+            "results_ns5": results.get('ns5', '情報なし'),
+        })
+
     return response
 
 # 競合他社の投稿タイトルのリストからオリジナルのタイトル候補を生成する関数
