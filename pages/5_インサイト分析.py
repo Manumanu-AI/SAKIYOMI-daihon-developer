@@ -1,19 +1,17 @@
-# pages/5_インサイト分析.py
-
 import streamlit as st
 import pandas as pd
 import numpy as np
 from application.insight_service import InsightService
-from application.prompt_service import PromptService  # この行を追加
+from application.prompt_service import PromptService
 from domain.insight import Insight
 import traceback
 from datetime import datetime, timedelta
 import anthropic
 import io
 
-@st.experimental_dialog("投稿データを追加", width="large")
-def add_insight_dialog():
-    with st.form("new_insight_form"):
+def add_insight_sidebar():
+    with st.sidebar.form("new_insight_form"):
+        st.header("投稿データを追加")
         post_url = st.text_input("投稿URL")
         plot = st.text_area("プロット")
         save_count = st.number_input("保存数", min_value=0, step=1)
@@ -42,21 +40,21 @@ def add_insight_dialog():
             result = service.create_new_insight(new_insight)
             if result["status"] == "success":
                 st.success("新しい投稿データが追加されました")
-                st.rerun()
+                st.experimental_rerun()
             else:
                 st.error("投稿データの追加に失敗しました")
 
-@st.experimental_dialog("投稿データを編集", width="large")
-def edit_insight_dialog():
+def edit_insight_sidebar():
     service = InsightService()
     user_id = st.session_state.get('user_info', {}).get('localId')
     insights = service.get_insights_by_user(user_id)
     insights_df = pd.DataFrame([insight.dict() for insight in insights])
-    
-    post_id = st.selectbox("編集する投稿を選択", options=insights_df['post_id'].tolist())
+
+    post_id = st.sidebar.selectbox("編集する投稿を選択", options=insights_df['post_id'].tolist())
     insight_to_edit = insights_df[insights_df['post_id'] == post_id].iloc[0]
 
-    with st.form("edit_insight_form"):
+    with st.sidebar.form("edit_insight_form"):
+        st.header("投稿データを編集")
         post_url = st.text_input("Post URL", value=insight_to_edit['post_url'])
         plot = st.text_area("Plot", value=insight_to_edit['plot'])
         save_count = st.number_input("Save Count", value=insight_to_edit['save_count'], min_value=0, step=1)
@@ -84,7 +82,7 @@ def edit_insight_dialog():
             result = service.update_insight(updated_insight)
             if result["status"] == "success":
                 st.success(f"Post {post_id} updated successfully")
-                st.rerun()
+                st.experimental_rerun()
             else:
                 st.error(f"Failed to update post {post_id}")
 
@@ -130,7 +128,7 @@ def main():
     try:
         insights = service.get_insights_by_user(user_id)
         st.sidebar.write(f"取得したインサイト数: {len(insights)}")
-        
+
         if insights:
             insights_df = pd.DataFrame([insight.dict() for insight in insights])
             insights_df['posted_at'] = pd.to_datetime(insights_df['posted_at'])
@@ -221,13 +219,13 @@ def main():
         st.markdown("### データ操作")
 
         col1, col2 = st.columns(2)
-        
+
         with col1:
             st.markdown("<br>", unsafe_allow_html=True)  # 空白を追加して高さを合わせる
             if st.button("投稿データを追加", use_container_width=True):
-                add_insight_dialog()
+                add_insight_sidebar()
             if st.button("投稿データを編集", use_container_width=True):
-                edit_insight_dialog()
+                edit_insight_sidebar()
 
         with col2:
             if insights:
@@ -236,7 +234,7 @@ def main():
                     result = service.delete_insight(user_id, post_id_to_delete)
                     if result["status"] == "success":
                         st.success(f"投稿 {post_id_to_delete} が正常に削除されました")
-                        st.rerun()
+                        st.experimental_rerun()
                     else:
                         st.error(f"投稿 {post_id_to_delete} の削除に失敗しました")
             else:
@@ -265,10 +263,10 @@ def main():
 
                 # ここでインサイトデータをAI分析用に整形
                 user_message = f"CSVデータ:\n{dataframe_to_string(insights_df)}\n\nユーザーの入力: インサイトデータの分析をお願いします。"
-                
+
                 # AI分析の実行
                 ai_analysis = get_ai_analysis(st.secrets["ANTHROPIC_API_KEY"], system_prompt, user_message)
-                
+
                 # 分析結果をセッション状態に保存
                 st.session_state.analysis_result = ai_analysis
 
