@@ -123,7 +123,6 @@ def main():
 
     st.sidebar.write("デバッグ情報:")
     st.sidebar.write(f"ログイン状態: {st.session_state.get('logged_in', False)}")
-    st.sidebar.write(f"ユーザーID: {user_id}")
 
     try:
         insights = service.get_insights_by_user(user_id)
@@ -183,7 +182,6 @@ def main():
                         delta = current_metrics[metric] - past_metrics[metric]
                         st.metric(label=metric, value=int(current_metrics[metric]), delta=int(delta))
 
-            st.sidebar.write("データフレーム作成成功")
             st.sidebar.write(f"データフレームの行数: {len(insights_df)}")
 
             # 表の上に「投稿データ」と記載
