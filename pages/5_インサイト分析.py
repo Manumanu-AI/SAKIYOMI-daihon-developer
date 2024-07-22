@@ -9,6 +9,8 @@ from datetime import datetime, timedelta
 import anthropic
 import io
 
+env = st.secrets.get("ENV", "")
+
 def add_insight_sidebar():
     with st.sidebar.form("new_insight_form"):
         st.header("投稿データを追加")
@@ -121,9 +123,10 @@ def main():
 
     service = InsightService()
 
-    st.sidebar.write("デバッグ情報:")
-    st.sidebar.write(f"ログイン状態: {st.session_state.get('logged_in', False)}")
-    st.sidebar.write(f"ユーザーID: {user_id}")
+    if env == "develop":
+        st.sidebar.write("デバッグ情報:")
+        st.sidebar.write(f"ログイン状態: {st.session_state.get('logged_in', False)}")
+        st.sidebar.write(f"ユーザーID: {user_id}")
 
     try:
         insights = service.get_insights_by_user(user_id)
