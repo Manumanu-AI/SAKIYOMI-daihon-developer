@@ -1,0 +1,6 @@
+.streamlit
+.venv
+memo
+firebase
+*_log.txt
+__pycache__

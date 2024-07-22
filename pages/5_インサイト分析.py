@@ -9,6 +9,7 @@ from datetime import datetime, timedelta
 import anthropic
 import io
 
+
 env = st.secrets.get("ENV", "")
 
 def add_insight_sidebar():
@@ -128,6 +129,7 @@ def main():
         st.sidebar.write(f"ログイン状態: {st.session_state.get('logged_in', False)}")
         st.sidebar.write(f"ユーザーID: {user_id}")
 
+
     try:
         insights = service.get_insights_by_user(user_id)
         st.sidebar.write(f"取得したインサイト数: {len(insights)}")
@@ -187,7 +189,6 @@ def main():
                         st.metric(label=metric, value=int(current_metrics[metric]), delta=int(delta))
 
             st.sidebar.write("データフレーム作成成功")
-            st.sidebar.write(f"データフレームの行数: {len(insights_df)}")
 
             # 表の上に「投稿データ」と記載
             st.markdown("### 投稿データ")
