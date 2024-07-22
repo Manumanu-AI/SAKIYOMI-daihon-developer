@@ -11,7 +11,7 @@ class Prompt(BaseModel):
 
     @validator('type')
     def validate_type(cls, v):
-        allowed_types = ['feed_post', 'feed_theme', 'reel_post', 'reel_theme', 'data_analysis']
+        allowed_types = ['feed_post', 'feed_theme', 'reel_post', 'reel_theme', 'insight_analysis']
         if v not in allowed_types:
             raise ValueError(f'Type must be one of {allowed_types}')
         return v
