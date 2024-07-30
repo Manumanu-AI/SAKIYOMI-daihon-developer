@@ -43,6 +43,7 @@ def add_insight_sidebar():
             result = service.create_new_insight(new_insight)
             if result["status"] == "success":
                 st.success("新しい投稿データが追加されました")
+                st.session_state['show_add_form'] = False
                 st.experimental_rerun()
             else:
                 st.error("投稿データの追加に失敗しました")
@@ -85,6 +86,7 @@ def edit_insight_sidebar():
             result = service.update_insight(updated_insight)
             if result["status"] == "success":
                 st.success(f"Post {post_id} updated successfully")
+                st.session_state['show_edit_form'] = False
                 st.experimental_rerun()
             else:
                 st.error(f"Failed to update post {post_id}")
@@ -222,14 +224,26 @@ def main():
         # データ操作セクション
         st.markdown("### データ操作")
 
+        if 'show_add_form' not in st.session_state:
+            st.session_state['show_add_form'] = False
+        if 'show_edit_form' not in st.session_state:
+            st.session_state['show_edit_form'] = False
+
         col1, col2 = st.columns(2)
 
         with col1:
             st.markdown("<br>", unsafe_allow_html=True)  # 空白を追加して高さを合わせる
             if st.button("投稿データを追加", use_container_width=True):
-                add_insight_sidebar()
+                st.session_state['show_add_form'] = not st.session_state['show_add_form']
+                st.session_state['show_edit_form'] = False
             if st.button("投稿データを編集", use_container_width=True):
-                edit_insight_sidebar()
+                st.session_state['show_edit_form'] = not st.session_state['show_edit_form']
+                st.session_state['show_add_form'] = False
+
+        if st.session_state['show_add_form']:
+            add_insight_sidebar()
+        if st.session_state['show_edit_form']:
+            edit_insight_sidebar()
 
         with col2:
             if insights:
