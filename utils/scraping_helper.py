@@ -270,7 +270,7 @@ def generate_claude3_response(user_input, system_prompt, results_ns1, results_ns
         results_ns5=results_ns5,
     )
     message = client.messages.create(
-        model="claude-3-opus-20240229",
+        model="claude-3-5-sonnet-20240620",
         max_tokens=2048,
         temperature=0.85,
         system=system_message,
@@ -353,7 +353,7 @@ def generate_new_titles(user_query, competing_titles, selected_llm, system_promp
     if selected_llm == "GPT-4o":
         llm = ChatOpenAI(model='gpt-4o', temperature=1.0)
     else:
-        llm = ChatAnthropic(model_name='claude-3-opus-20240229', temperature=1.0)
+        llm = ChatAnthropic(model_name='claude-3-5-sonnet-20240620', temperature=1.0)
     llm_chain = LLMChain(prompt=prompt_template, llm=llm)
     response = llm_chain.run({
         "user_query": user_query,
