@@ -299,7 +299,7 @@ def generate_response_with_llm_for_multiple_namespaces(index, user_input, namesp
     if selected_llm == "GPT-4o":
         llm = ChatOpenAI(model='gpt-4o', temperature=1.0)
     else:
-        llm = ChatAnthropic(model_name='claude-3-opus-20240229', temperature=1.0)
+        llm = ChatAnthropic(model_name='claude-3-5-sonnet-20240620', temperature=1.0)
 
     llm_chain = LLMChain(prompt=prompt_template, llm=llm)
 
