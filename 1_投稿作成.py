@@ -185,7 +185,7 @@ def main():
         st.sidebar.write("新しいプロンプトを作成してください")
         return
 
-    tab1, tab2, tab3 = st.tabs(["プロット生成", "データ登録", "ネタ提案"])
+    tab1, tab2, tab3 = st.tabs(["プロット生成", "データ登録", "テーマ提案"])
 
     with tab1:
         col1, col2 = st.columns(2)
@@ -312,7 +312,7 @@ def main():
                 st.success("全データが削除されました！")
 
     with tab3:
-        st.header("投稿ネタ提案")
+        st.header("投稿テーマ提案")
         col1, col2 = st.columns(2)
         with col1:
             with st.form("search_form"):
