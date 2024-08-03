@@ -297,9 +297,9 @@ def generate_response_with_llm_for_multiple_namespaces(index, user_input, namesp
 
     # LLMの選択
     if selected_llm == "GPT-4o":
-        llm = ChatOpenAI(model='gpt-4o', temperature=1.0)
+        llm = ChatOpenAI(model='gpt-4o', temperature=1.0, max_tokens=3072)
     else:
-        llm = ChatAnthropic(model_name='claude-3-5-sonnet-20240620', temperature=1.0)
+        llm = ChatAnthropic(model_name='claude-3-5-sonnet-20240620', temperature=1.0, max_tokens=3072)
 
     llm_chain = LLMChain(prompt=prompt_template, llm=llm)
 
@@ -319,9 +319,9 @@ def generate_response_with_llm_for_multiple_namespaces(index, user_input, namesp
 def generate_new_titles(user_query, competing_titles, selected_llm, system_prompt_title_reccomend):
     prompt_template = PromptTemplate(template=system_prompt_title_reccomend, input_variables=["user_query", "competing_titles"])
     if selected_llm == "GPT-4o":
-        llm = ChatOpenAI(model='gpt-4o', temperature=1.0)
+        llm = ChatOpenAI(model='gpt-4o', temperature=1.0, max_tokens=3072)
     else:
-        llm = ChatAnthropic(model_name='claude-3-5-sonnet-20240620', temperature=1.0)
+        llm = ChatAnthropic(model_name='claude-3-5-sonnet-20240620', temperature=1.0, max_tokens=3072)
     llm_chain = LLMChain(prompt=prompt_template, llm=llm)
     response = llm_chain.run({
         "user_query": user_query,
