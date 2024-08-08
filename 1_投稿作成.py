@@ -325,7 +325,7 @@ def main():
                 with st.spinner('テーマ提案中...'):
                     if not user_query:
                         user_query = "*"
-                    query_results = sh.perform_similarity_search(index, user_query, "ns3", top_k=10)
+                    query_results = sh.perform_similarity_search(index, user_query, "ns4", top_k=10)
                     titles = sh.get_search_results_titles(query_results)
                     original_titles = sh.generate_new_titles(user_query, titles, selected_llm_title, st.session_state['prompt']['system_prompt_title_reccomend'])
                     st.session_state['reccomend_title'] = [f"- {title}" for title in original_titles.split('\n') if title.strip()]
