@@ -294,7 +294,7 @@ def main():
                 st.success("全データが削除されました！")
 
         with col4:
-            st.subheader("SAKIYOMIデータの登録")
+            st.subheader("その他PDFの登録")
             pdf_file3 = st.file_uploader("PDFをアップロード", type=["pdf"], key="pdf_file3")
             register_button4 = st.button("PDF登録", key="register_button4")
 
