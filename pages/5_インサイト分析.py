@@ -28,6 +28,7 @@ def add_insight_sidebar():
         if submitted:
             service = InsightService()
             user_id = st.session_state.get('user_info', {}).get('localId')
+            posted_at = datetime.combine(posted_at, datetime.min.time())
             new_insight = Insight(
                 user_id=user_id,
                 post_url=post_url,
