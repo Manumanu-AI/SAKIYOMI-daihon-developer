@@ -74,7 +74,7 @@ system_prompt_title_reccomend_example = """
 
 # Input
 ユーザーがどういう投稿を作りたいかの考え: {user_query}
-競合他社の投稿タイトルのリスト: {competing_titles}
+伸びている競合他社の投稿タイトルのリスト: {competing_titles}
 
 # Output
 タスクに対する回答として、10個の新しいタイトル案のリストです。
