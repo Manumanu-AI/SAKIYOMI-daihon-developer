@@ -1,11 +1,13 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
+from application.performance_service import PerformanceService
 from application.insight_service import InsightService
 from application.prompt_service import PromptService
 from domain.insight import Insight
 import traceback
 from datetime import datetime, timedelta
+import pytz
 import anthropic
 import io
 
@@ -126,6 +128,7 @@ def main():
         return
 
     service = InsightService()
+    performance_service = PerformanceService(user_id)
 
     if env == "develop":
         st.sidebar.write("デバッグ情報:")
@@ -288,6 +291,9 @@ def main():
 
                 # 分析結果をセッション状態に保存
                 st.session_state.analysis_result = ai_analysis
+
+                today = datetime.now(pytz.timezone('Asia/Tokyo')).date()
+                performance_service.log_data_analysis_run(today)
 
         # 分析結果の表示
         if 'analysis_result' not in st.session_state:

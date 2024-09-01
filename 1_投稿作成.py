@@ -1,10 +1,13 @@
 import streamlit as st
 import utils.scraping_helper as sh
 import time
+import pytz
+from datetime import datetime, timedelta
 from utils.firebase_auth import sign_in, get_user_info
 from application.user_service import UserService
 from application.user_index_service import UserIndexService
 from application.prompt_service import PromptService
+from application.performance_service import PerformanceService
 from utils.example_prompt import system_prompt_example, system_prompt_title_reccomend_example
 
 user_service = UserService()
@@ -187,6 +190,8 @@ def main():
 
     tab1, tab2, tab3 = st.tabs(["プロット生成", "データ登録", "テーマ提案"])
 
+    performance_service = PerformanceService(st.session_state['user_info']['localId'])
+
     with tab1:
         col1, col2 = st.columns(2)
 
@@ -228,6 +233,12 @@ def main():
                     if response:
                         response_text = response.get('text')
                         st.session_state['response_text'] = response_text
+                        if plan == 'feed':
+                            today = datetime.now(pytz.timezone('Asia/Tokyo')).date()
+                            performance_service.log_feed_run(today)
+                        elif plan == 'reel':
+                            today = datetime.now(pytz.timezone('Asia/Tokyo')).date()
+                            performance_service.log_reel_run(today)
                     else:
                         st.session_state['response_text'] = "エラー: プロットを生成できませんでした。"
 
@@ -329,6 +340,12 @@ def main():
                     titles = sh.get_search_results_titles(query_results)
                     original_titles = sh.generate_new_titles(user_query, titles, selected_llm_title, st.session_state['prompt']['system_prompt_title_reccomend'])
                     st.session_state['reccomend_title'] = [f"- {title}" for title in original_titles.split('\n') if title.strip()]
+                    if plan == 'feed':
+                        today = datetime.now(pytz.timezone('Asia/Tokyo')).date()
+                        performance_service.log_feed_theme_run(today)
+                    elif plan == 'reel':
+                        today = datetime.now(pytz.timezone('Asia/Tokyo')).date()
+                        performance_service.log_reel_theme_run(today)
                 display_titles = st.session_state.get('reccomend_title', "")
                 st.text_area("生成されたタイトル案:", "\n".join(display_titles), height=500)
 
