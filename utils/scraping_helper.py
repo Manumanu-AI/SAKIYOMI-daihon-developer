@@ -198,7 +198,12 @@ def perform_similarity_search(index, query, namespace, top_k=3):
 # 検索結果からメタデータの中のタイトルキーのみを取得する関数
 def get_search_results_titles(search_results):
     search_results_metadata = search_results["matches"]
-    search_results_titles = [result["metadata"].get("1枚目-表紙 (タイトル)", "N/A") for result in search_results_metadata]
+    search_results_titles = []
+
+    for result in search_results_metadata:
+        metadata = result["metadata"]
+        title = metadata.get("1枚目-表紙 (タイトル)", metadata.get("タイトル", "N/A"))
+        search_results_titles.append(title)
     logger.info(search_results_titles)
     return search_results_titles
 
