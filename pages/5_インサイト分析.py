@@ -20,8 +20,8 @@ def add_insight_sidebar():
         save_count = st.number_input("保存数", min_value=0, step=1)
         like_count = st.number_input("いいね数", min_value=0, step=1)
         reach_count = st.number_input("リーチ数", min_value=0, step=1)
-        new_reach_count = st.number_input("/フォロワーリーチ数", min_value=0, step=1)
-        followers_reach_count = st.number_input("/フォロワー以外リーチ数", min_value=0, step=1)
+        new_reach_count = st.number_input("/フォロワー以外リーチ%", min_value=0, step=1)
+        followers_reach_count = st.number_input("/フォロワーリーチ%", min_value=0, step=1)
         posted_at = st.date_input("投稿日")
 
         submitted = st.form_submit_button("保存")
@@ -209,8 +209,8 @@ def main():
                     "save_count": st.column_config.NumberColumn("保存数"),
                     "like_count": st.column_config.NumberColumn("いいね数"),
                     "reach_count": st.column_config.NumberColumn("リーチ数"),
-                    "new_reach_count": st.column_config.NumberColumn("新規リーチ数"),
-                    "followers_reach_count": st.column_config.NumberColumn("フォロワーリーチ数"),
+                    "new_reach_count": st.column_config.NumberColumn("/新規リーチ%"),
+                    "followers_reach_count": st.column_config.NumberColumn("/フォロワーリーチ%"),
                     "posted_at": st.column_config.DatetimeColumn("投稿日時", format="YYYY-MM-DD HH:mm:ss"),
                 },
                 hide_index=True,
