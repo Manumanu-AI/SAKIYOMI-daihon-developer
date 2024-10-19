@@ -159,7 +159,7 @@ def store_data_in_pinecone(index, chunk_embeddings, chunks, metadata_list, names
         print(f"Saved: {vector['id']}")
 
 # シミラリティ検索を実行する関数
-# def perform_similarity_search(index, query, namespace, top_k=3):
+# def perform_similarity_search(index, query, namespace, top_k=7):
 #     query_embedding = generate_query_embedding(query)
 #     return index.query(
 #         namespace=namespace,
