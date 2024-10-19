@@ -198,7 +198,7 @@ def main():
         with col1:
             user_input = st.text_area("生成指示 : 作りたいプロットのイメージを入力", value="""以下の内容で台本を書いてください。\nテーマ：\n\nターゲット：\n\nその他の指示：""", height=300)
             url = st.text_input("参考URL")
-            selected_llm = st.radio("LLMの選択", ("GPT-4o", "Claude3.5"))
+            selected_llm = st.radio("LLMの選択", ("GPT-4o", "Claude3"))
             submit_button = st.button('送信')
 
         if submit_button:
