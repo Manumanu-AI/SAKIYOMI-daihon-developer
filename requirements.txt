@@ -17,3 +17,4 @@ requests==2.30.0
 sentence-transformers==2.2.2
 streamlit==1.29.0
 firebase_admin
+huggingface_hub==0.24.7
