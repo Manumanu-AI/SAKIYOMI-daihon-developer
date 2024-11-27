@@ -3,11 +3,8 @@ apify_client==1.6.4
 email-validator==2.1.1
 langchain==0.1.2
 langchain-anthropic==0.1.4
-langchain-community==0.0.15
 langchain-core==0.1.14
 langchain-openai==0.0.3
-langchainhub==0.1.14
-langgraph==0.0.17
 langsmith==0.0.83
 openai==1.9.0
 pinecone-client==3.0.0
