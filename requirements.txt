@@ -1,4 +1,4 @@
-anthropic==0.25.1
+anthropic
 apify_client==1.6.4
 email-validator==2.1.1
 langchain==0.3.8
