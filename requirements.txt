@@ -2,10 +2,10 @@ anthropic==0.25.1
 apify_client==1.6.4
 email-validator==2.1.1
 langchain==0.3
-langchain-anthropic==0.1.4
+langchain-anthropic
 langchain-community==0.0.15
-langchain-core==0.1.14
-langchain-openai==0.0.3
+langchain-core==0.3.21
+langchain-openai
 langchainhub==0.1.14
 langgraph==0.0.17
 langsmith
